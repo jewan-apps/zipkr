@@ -33,6 +33,9 @@ android {
         debug {
             isMinifyEnabled = false
             applicationIdSuffix = ".debug"
+            // Google 공식 테스트 광고 ID (출시 절대 사용 금지)
+            buildConfigField("String", "ADMOB_APP_ID", "\"ca-app-pub-3940256099942544~3347511713\"")
+            buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"ca-app-pub-3940256099942544/6300978111\"")
         }
         release {
             isMinifyEnabled = true
@@ -41,20 +44,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-        }
-    }
-
-    flavorDimensions += "env"
-    productFlavors {
-        create("dev") {
-            dimension = "env"
-            // 테스트 광고 ID — Google 공식 샘플 (출시 절대 사용 금지)
-            buildConfigField("String", "ADMOB_APP_ID", "\"ca-app-pub-3940256099942544~3347511713\"")
-            buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"ca-app-pub-3940256099942544/6300978111\"")
-        }
-        create("prod") {
-            dimension = "env"
-            // 실제 광고 ID는 Phase 9에서 local.properties → BuildConfig 주입으로 대체
+            // 실제 광고 ID는 Phase 7에서 local.properties → BuildConfig 주입으로 대체한다.
         }
     }
 
