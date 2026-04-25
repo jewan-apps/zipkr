@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.detekt)
     alias(libs.plugins.ktlint)
-    // google-services / crashlytics는 Phase 9에서 활성화
+    // google-services / crashlytics는 Phase 7에서 활성화
 }
 
 android {
