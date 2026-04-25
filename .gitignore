@@ -1,4 +1,30 @@
 # Worktree 격리 디렉토리 (병렬 subagent 작업 공간)
 .worktrees/
 
-# (Phase 0 Task 0.6에서 Android 빌드 산출물·시크릿 패턴 추가 예정)
+# === Android / Gradle ===
+*.iml
+.gradle/
+local.properties
+.idea/
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+
+# === Secrets ===
+google-services.json
+**/google-services.json
+*.keystore
+*.jks
+keystore.properties
+
+# === Reports ===
+**/build/reports/
+
+# === macOS ===
+.DS_Store

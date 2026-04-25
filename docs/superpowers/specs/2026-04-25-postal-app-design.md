@@ -270,7 +270,7 @@ class AddressRepositoryImpl @Inject constructor(
 ## 7. 광고 통합 (AdMob)
 
 - **MVP**: 하단 적응형 배너 1개 (모든 화면 공통)
-- 개발 중 — 테스트 광고 ID, 출시 직전 — 실 광고 ID로 BuildConfig flavor 분기
+- 개발 중 — 테스트 광고 ID(debug 빌드), 출시 직전 — 실 광고 ID(release 빌드)로 buildTypes 분기 (단순 앱이라 flavor 미사용)
 - `ads/AdBanner.kt` Compose 컴포저블로 래핑 → 다음 앱 그대로 재사용 (공통 자산)
 - 전면 광고는 **v1.1**로 분리 (정책 위반 리스크 사전 방지)
 
@@ -290,7 +290,7 @@ class AddressRepositoryImpl @Inject constructor(
 ## 9. 출시 체크리스트
 
 ### 코드/빌드
-- [ ] `BuildConfig` flavor: `dev`(테스트 광고 ID) / `prod`(실 광고 ID)
+- [ ] `buildTypes`: `debug`(테스트 광고 ID) / `release`(실 광고 ID via local.properties 주입)
 - [ ] `local.properties`에 `JUSO_API_KEY` 저장 + `.gitignore` 확인
 - [ ] 키스토어 생성 + **안전한 백업 위치 표준화** (분실 = 앱 영구 업데이트 불가)
 - [ ] `proguard-rules.pro` — Retrofit·Hilt·kotlinx-serialization 룰

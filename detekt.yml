@@ -1,0 +1,35 @@
+complexity:
+  LongMethod:
+    active: true
+    threshold: 50
+  LongParameterList:
+    active: true
+    functionThreshold: 4
+    constructorThreshold: 4
+  TooManyFunctions:
+    active: true
+    thresholdInClasses: 15
+  ComplexCondition:
+    active: true
+    threshold: 4
+  CyclomaticComplexMethod:
+    active: true
+    threshold: 10
+  NestedBlockDepth:
+    active: true
+    threshold: 3
+
+naming:
+  FunctionNaming:
+    active: true
+    ignoreAnnotated: ['Composable']
+
+style:
+  MagicNumber:
+    active: true
+    ignorePropertyDeclaration: true
+    ignoreAnnotation: true
+    ignoreEnums: true
+  MaxLineLength:
+    active: true
+    maxLineLength: 120
