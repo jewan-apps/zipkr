@@ -40,7 +40,7 @@ zipkr/
 ├─ local.properties                              ← (gitignore) JUSO_API_KEY, ADMOB_APP_ID 등
 ├─ detekt.yml                                    ← Detekt 설정
 ├─ app/
-│   ├─ build.gradle.kts                          ← 앱 모듈 빌드 (flavor 포함)
+│   ├─ build.gradle.kts                          ← 앱 모듈 빌드 (buildTypes 분리)
 │   ├─ proguard-rules.pro                        ← Hilt·Retrofit·Serialization 보존 룰
 │   ├─ src/
 │   │   ├─ main/
@@ -401,7 +401,7 @@ git -C /Users/jewan/Desktop/git/98_jewan/zipkr add build.gradle.kts
 git -C /Users/jewan/Desktop/git/98_jewan/zipkr commit -m "chore: 루트 build에 KSP·Hilt·Firebase·Detekt·Ktlint 플러그인 등록"
 ```
 
-### Task 0.5: app/build.gradle.kts — 플러그인·의존성·flavor 셋업
+### Task 0.5: app/build.gradle.kts — 플러그인·의존성·buildTypes 셋업
 
 **Files:**
 - Modify: `app/build.gradle.kts`
@@ -417,7 +417,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.detekt)
     alias(libs.plugins.ktlint)
-    // google-services / crashlytics는 Phase 9에서 활성화
+    // google-services / crashlytics는 Phase 7에서 활성화
 }
 
 android {
@@ -444,6 +444,9 @@ android {
         debug {
             isMinifyEnabled = false
             applicationIdSuffix = ".debug"
+            // Google 공식 테스트 광고 ID (출시 절대 사용 금지)
+            buildConfigField("String", "ADMOB_APP_ID", "\"ca-app-pub-3940256099942544~3347511713\"")
+            buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"ca-app-pub-3940256099942544/6300978111\"")
         }
         release {
             isMinifyEnabled = true
@@ -452,20 +455,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-        }
-    }
-
-    flavorDimensions += "env"
-    productFlavors {
-        create("dev") {
-            dimension = "env"
-            // 테스트 광고 ID — Google 공식 샘플 (출시 절대 사용 금지)
-            buildConfigField("String", "ADMOB_APP_ID", "\"ca-app-pub-3940256099942544~3347511713\"")
-            buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"ca-app-pub-3940256099942544/6300978111\"")
-        }
-        create("prod") {
-            dimension = "env"
-            // 실제 광고 ID는 Phase 9에서 local.properties → BuildConfig 주입으로 대체
+            // 실제 광고 ID는 Phase 7에서 local.properties → BuildConfig 주입으로 대체한다.
         }
     }
 
@@ -554,7 +544,7 @@ dependencies {
 - [ ] **Step 2: Sync + 빌드 통과 확인**
 
 ```bash
-cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:assembleDevDebug
+cd /Users/jewan/Desktop/git/98_jewan/zipkr/.worktrees/bootstrap && ./gradlew :app:assembleDebug
 ```
 
 Expected: BUILD SUCCESSFUL. (이 시점엔 Hilt @HiltAndroidApp 미적용으로 런타임은 아직 실패할 수 있으나 컴파일은 통과해야 함.)
@@ -563,10 +553,11 @@ Expected: BUILD SUCCESSFUL. (이 시점엔 Hilt @HiltAndroidApp 미적용으로 
 
 ```bash
 git -C /Users/jewan/Desktop/git/98_jewan/zipkr add app/build.gradle.kts
-git -C /Users/jewan/Desktop/git/98_jewan/zipkr commit -m "chore: app 모듈 빌드 셋업 (Hilt·Compose·Network·Ads·flavor)
+git -C /Users/jewan/Desktop/git/98_jewan/zipkr commit -m "chore: app 모듈 빌드 셋업 (Hilt·Compose·Network·Ads·buildTypes)
 
 - compileSdk 34 / minSdk 24 / Java 17.
-- flavor: dev(테스트 광고 ID) / prod(실 광고 ID는 Phase 9 주입).
+- buildTypes: debug(테스트 광고 ID) / release(실 광고 ID는 Phase 7에서 주입).
+- 단순 앱이므로 flavor 미사용 — buildTypes만으로 광고 ID 분리.
 - Compose BOM, Hilt, Retrofit, OkHttp, Coil, Accompanist, Timber,
   LeakCanary(debug), AdMob, 테스트 라이브러리(MockK·Turbine·Truth) 포함.
 "
@@ -725,7 +716,7 @@ import timber.log.Timber
 /**
  * 앱 전역 진입점이다.
  * 디버그 빌드에서만 Timber DebugTree를 심어 로컬 콘솔로 로그를 흘린다.
- * 릴리스 빌드는 Phase 9에서 Crashlytics Tree로 교체한다.
+ * 릴리스 빌드는 Phase 7에서 Crashlytics Tree로 교체한다.
  */
 @HiltAndroidApp
 class ZipkrApp : Application() {
@@ -3020,7 +3011,7 @@ git -C /Users/jewan/Desktop/git/98_jewan/zipkr commit -m "feat(i18n): EN strings
 
 **브랜치:** `feat/ads-v1`
 
-**목표:** AdBanner Compose 컴포저블 + dev flavor 테스트 광고로 검증.
+**목표:** AdBanner Compose 컴포저블 + debug 빌드 테스트 광고로 검증.
 
 ### Task 6.1: feat 브랜치 + AdBanner
 
@@ -3042,7 +3033,7 @@ git -C /Users/jewan/Desktop/git/98_jewan/zipkr checkout -b feat/ads-v1
     android:value="@string/admob_app_id" />
 ```
 
-- [ ] **Step 3: strings.xml에 admob_app_id placeholder 추가 (BuildConfig에서 동적으로 안 들어가므로 임시 상수, dev flavor 테스트 ID)**
+- [ ] **Step 3: strings.xml에 admob_app_id placeholder 추가 (BuildConfig에서 동적으로 안 들어가므로 임시 상수, debug 빌드 테스트 ID)**
 
 `app/src/main/res/values/strings.xml`에 추가:
 
@@ -3050,7 +3041,7 @@ git -C /Users/jewan/Desktop/git/98_jewan/zipkr checkout -b feat/ads-v1
 <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
 ```
 
-> 출시 전 prod flavor용 별도 처리 — Phase 7에서 manifest placeholder 방식으로 교체.
+> 출시 전 release 빌드용 별도 처리 — Phase 7에서 manifest placeholder 방식으로 교체.
 
 - [ ] **Step 4: ads/AdBanner.kt 작성**
 
@@ -3075,8 +3066,8 @@ import com.jewan.zipkr.BuildConfig
 
 /**
  * 적응형 배너 광고이다.
- * - dev flavor: 구글 공식 테스트 광고 ID 사용.
- * - prod flavor: BuildConfig.ADMOB_BANNER_UNIT_ID 사용 (Phase 7에서 주입).
+ * - debug 빌드: 구글 공식 테스트 광고 ID 사용.
+ * - release 빌드: BuildConfig.ADMOB_BANNER_UNIT_ID 사용 (Phase 7에서 주입).
  */
 @Composable
 fun AdBanner(modifier: Modifier = Modifier) {
@@ -3117,7 +3108,7 @@ bottomBar = { AdBanner() },
 - [ ] **Step 6: 빌드 + 실기기 검증**
 
 ```bash
-cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:installDevDebug
+cd /Users/jewan/Desktop/git/98_jewan/zipkr/.worktrees/<phase-worktree> && ./gradlew :app:installDebug
 ```
 
 수동: 양 화면 하단에 "Test Ad" 배너 표시 확인.
@@ -3128,7 +3119,7 @@ cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:installDevDebug
 git -C /Users/jewan/Desktop/git/98_jewan/zipkr add app/src/main/AndroidManifest.xml app/src/main/res/values/strings.xml app/src/main/kotlin/com/jewan/zipkr/ads/AdBanner.kt app/src/main/kotlin/com/jewan/zipkr/ui/search/SearchScreen.kt app/src/main/kotlin/com/jewan/zipkr/ui/detail/DetailScreen.kt
 git -C /Users/jewan/Desktop/git/98_jewan/zipkr commit -m "feat(ads): AdMob 적응형 배너 — 양 화면 bottomBar 연결
 
-dev flavor: 구글 테스트 광고 ID. prod ID는 Phase 7에서 주입.
+debug 빌드: 구글 테스트 광고 ID. release 빌드의 실 ID는 Phase 7에서 주입.
 "
 ```
 
@@ -3293,7 +3284,7 @@ buildTypes {
 cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:bundleProdRelease
 ```
 
-Expected: `app/build/outputs/bundle/prodRelease/app-prod-release.aab` 생성.
+Expected: `app/build/outputs/bundle/release/app-release.aab` 생성.
 
 - [ ] **Step 5: commit**
 
@@ -3355,7 +3346,7 @@ git -C /Users/jewan/Desktop/git/98_jewan/zipkr add app/proguard-rules.pro
 git -C /Users/jewan/Desktop/git/98_jewan/zipkr commit -m "chore: ProGuard 룰 — Serialization·Retrofit·Hilt·Timber 보존"
 ```
 
-### Task 7.5: 실제 AdMob ID 주입 (prod flavor)
+### Task 7.5: 실제 AdMob ID 주입 (release 빌드)
 
 **Files:**
 - Modify: `app/build.gradle.kts`
@@ -3370,11 +3361,15 @@ admob.app.id=ca-app-pub-실제ID
 admob.banner.unit.id=ca-app-pub-실제ID/실제ID
 ```
 
-- [ ] **Step 2: app/build.gradle.kts — prod flavor에 BuildConfig 주입**
+- [ ] **Step 2: app/build.gradle.kts — release buildType에 BuildConfig 주입**
 
-`productFlavors { create("prod") {} }` 블록에:
+`buildTypes { release { ... } }` 블록에 추가:
 
 ```kotlin
+val localProps = java.util.Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) load(file.inputStream())
+}
 val admobAppId = localProps.getProperty("admob.app.id", "")
 val admobBannerUnitId = localProps.getProperty("admob.banner.unit.id", "")
 buildConfigField("String", "ADMOB_APP_ID", "\"$admobAppId\"")
@@ -3382,7 +3377,7 @@ buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"$admobBannerUnitId\"")
 manifestPlaceholders["admobAppId"] = admobAppId
 ```
 
-`dev` flavor 동일 패턴으로 manifestPlaceholders에 테스트 ID 등록.
+`debug` buildType은 기존 테스트 광고 ID 유지 + `manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"` 추가.
 
 `app/src/main/AndroidManifest.xml`의 meta-data 값을 `${admobAppId}` placeholder로:
 
@@ -3394,9 +3389,9 @@ manifestPlaceholders["admobAppId"] = admobAppId
 
 `strings.xml`의 `admob_app_id` 항목 제거 (manifest placeholder 방식으로 일원화).
 
-- [ ] **Step 3: prod release 빌드에서 실제 광고 단위 ID 호출되는지 검증**
+- [ ] **Step 3: release 빌드에서 실제 광고 단위 ID 호출되는지 검증**
 
-`./gradlew :app:installProdRelease` 후 실기기에서 광고 노출 (실제 광고는 Google 서버 응답에 시간 걸릴 수 있음).
+`./gradlew :app:installRelease` 후 실기기에서 광고 노출 (실제 광고는 Google 서버 응답에 시간 걸릴 수 있음).
 
 - [ ] **Step 4: jewan100.github.io의 app-ads.txt 갱신 (형 직접)**
 
@@ -3408,9 +3403,9 @@ google.com, pub-실제publisher_id, DIRECT, f08c47fec0942fa0
 
 ```bash
 git -C /Users/jewan/Desktop/git/98_jewan/zipkr add app/build.gradle.kts app/src/main/AndroidManifest.xml app/src/main/res/values/strings.xml
-git -C /Users/jewan/Desktop/git/98_jewan/zipkr commit -m "chore(ads): prod flavor — 실제 AdMob ID local.properties 주입
+git -C /Users/jewan/Desktop/git/98_jewan/zipkr commit -m "chore(ads): release 빌드 — 실제 AdMob ID local.properties 주입
 
-manifestPlaceholders로 dev/prod 분리.
+manifestPlaceholders로 debug(테스트 ID) / release(실 ID) 분리.
 "
 ```
 
@@ -3570,7 +3565,7 @@ git -C /Users/jewan/Desktop/git/98_jewan/zipkr push origin v1.0.0
 
 ### Task 8.3: AAB 업로드 + 내부 테스트 → Closed Testing → Production
 
-- [ ] **Step 1: 내부 테스트 트랙에 `app-prod-release.aab` 업로드**
+- [ ] **Step 1: 내부 테스트 트랙에 `app-release.aab` 업로드**
 - [ ] **Step 2: 본인 + 1~2명 지인으로 내부 테스트 (정책 위반 사전 확인)**
 - [ ] **Step 3: Closed Testing 5~10명 (옵션)**
 - [ ] **Step 4: Production 출시 (심사 1~3일)**
