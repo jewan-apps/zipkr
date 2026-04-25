@@ -2,19 +2,17 @@
 
 **작성일**: 2026-04-25
 **상태**: 설계 완료 (구현 계획 작성 대기)
-**프로젝트 경로**: `/Users/jewan/Desktop/git/98_jewan/zipkr/`
 **GitHub**: https://github.com/jewan-apps/zipkr (Public)
-**관련 메모리**: `project_app_factory_standards.md` (앱 양산 공장 표준)
-**준수 헌법**: `/Users/jewan/Desktop/git/98_jewan/JEWAN_DEV_CONSTITUTION.md` (단일 원본)
-**관련 ADR**: `docs/decisions/0001-android-library-stack.md` (라이브러리 일괄 승인)
+**준수 표준**: 내부 개발 헌법(JEWAN_DEV_CONSTITUTION)
+**관련 ADR**: [`docs/decisions/0001-android-library-stack.md`](../../decisions/0001-android-library-stack.md) (라이브러리 일괄 승인)
 
 ---
 
 ## 1. Context — 이 앱이 왜 만들어지는가
 
 ### 큰 그림
-`98_jewan/`을 루트로 100개의 광고 수익형 안드로이드 앱을 양산하는 비전의 **첫 번째 앱**.
-"한 개를 잘 만든다"가 아니라 "**다음 99개에 무엇이 자산으로 남는가**"가 모든 결정의 기준.
+광고 수익형 안드로이드 앱 시리즈의 **첫 번째 앱**.
+"한 개를 잘 만든다" + "**다음 앱에 무엇이 자산으로 재사용될 수 있는가**" 두 축이 모든 결정의 기준.
 
 ### 첫 앱으로 우편번호를 고른 이유
 - **단일·명확한 기능**: 주소 → 우편번호 조회. MVP를 빠르게 띄우기 적합.
@@ -25,7 +23,7 @@
 
 ### 의도된 결과
 - **출시**: D+10~17일 안에 Google Play Production 출시.
-- **자산화**: 첫 앱 출시 직후 `core-ui`·`core-ads`·`core-network` 등 **양산용 공통 모듈**의 시드(seed) 추출.
+- **자산화**: 첫 앱 출시 직후 `core-ui`·`core-ads`·`core-network` 등 **공통 모듈**의 시드(seed) 추출.
 - **수익 베이스라인**: 출시 후 1개월 내 DAU 100 / 월 수익 ~$30 진입 (KPI 목표).
 
 ---
@@ -98,7 +96,7 @@
    AdMob (별도 모듈처럼 분리)
 ```
 
-### 패키지 구조 (single-module, 양산 자산화 가능한 경계)
+### 패키지 구조 (single-module, 재사용 가능한 경계)
 
 ```
 com.jewan.zipkr/
@@ -109,10 +107,10 @@ com.jewan.zipkr/
 │   ├─ detail/
 │   │   ├─ DetailScreen.kt
 │   │   └─ DetailViewModel.kt
-│   ├─ theme/              ⭐ 양산 자산
-│   └─ components/         ⭐ 양산 자산 (EmptyState, ErrorView, LoadingSkeleton, CopyableCard)
+│   ├─ theme/              ⭐ 공통 자산
+│   └─ components/         ⭐ 공통 자산 (EmptyState, ErrorView, LoadingSkeleton, CopyableCard)
 ├─ data/
-│   ├─ AddressRepository.kt              ⭐ 양산 자산 (인터페이스)
+│   ├─ AddressRepository.kt              ⭐ 공통 자산 (인터페이스)
 │   ├─ AddressRepositoryImpl.kt
 │   └─ provider/
 │       ├─ AddressProvider.kt            ← Provider 인터페이스
@@ -120,9 +118,9 @@ com.jewan.zipkr/
 │           ├─ JusoApiProvider.kt
 │           ├─ JusoApi.kt (Retrofit)
 │           └─ JusoModels.kt
-├─ ads/                    ⭐ 양산 자산 (AdBanner Compose 컴포저블)
-├─ util/                   ⭐ 양산 자산 (Clipboard, Share, Haptic, Toast)
-├─ di/                     ⭐ 양산 자산 (Hilt 모듈)
+├─ ads/                    ⭐ 공통 자산 (AdBanner Compose 컴포저블)
+├─ util/                   ⭐ 공통 자산 (Clipboard, Share, Haptic, Toast)
+├─ di/                     ⭐ 공통 자산 (Hilt 모듈)
 │   ├─ NetworkModule.kt
 │   ├─ DataModule.kt
 │   └─ AppModule.kt
@@ -132,7 +130,7 @@ com.jewan.zipkr/
 
 ⭐ 표시 = 두 번째 앱부터 `core-ui`, `core-ads`, `core-network`, `core-util`, `core-i18n` 등의 모듈로 추출 후보.
 
-### 라이브러리 선택 (모두 양산 표준)
+### 라이브러리 선택 (모두 공통 표준)
 
 **언어/UI**
 - Kotlin + Jetpack Compose, Material3
@@ -158,10 +156,10 @@ com.jewan.zipkr/
 **광고**
 - Google Mobile Ads SDK (AdMob)
 
-**운영 (100개 앱 운영의 척추)**
+**운영 (장기 운영의 척추)**
 - **Timber** (로깅 표준화, 환경별 자동 분기)
 - **LeakCanary** (debug only — 메모리 누수 자동 탐지)
-- **Firebase Crashlytics** ⭐ (크래시 자동 수집·알림 — 100개 앱을 한 콘솔에서 관제)
+- **Firebase Crashlytics** ⭐ (크래시 자동 수집·알림 — 여러 앱을 한 콘솔에서 관제)
 
 **테스트**
 - JUnit + **MockK** (Kotlin 친화 mock)
@@ -238,7 +236,8 @@ com.jewan.zipkr/
 - 페이징: `currentPage`, `countPerPage` (MVP는 첫 10개만)
 - 영문 주소: 같은 응답에 `engAddr` 포함 — 별도 호출 불필요
 
-### Repository / Provider 추상화 (양산 자산)
+### Repository / Provider 추상화 (공통 자산)
+
 ```kotlin
 interface AddressProvider {
     suspend fun search(query: String): Result<List<Address>>
@@ -261,10 +260,10 @@ class AddressRepositoryImpl @Inject constructor(
 - API 결과 코드 비정상 → 사용자 친화 메시지 매핑
 - 빈 결과 → Empty 상태 UI
 
-### 키 관리 표준 (양산 자산)
+### 키 관리 표준 (공통 자산)
 - `local.properties`에 `JUSO_API_KEY=...` 저장 → `.gitignore` 처리
 - `build.gradle.kts`에서 `BuildConfig.JUSO_API_KEY`로 노출
-- 모든 양산 앱이 동일 패턴
+- 모든 후속 프로젝트가 동일 패턴
 
 ---
 
@@ -272,17 +271,17 @@ class AddressRepositoryImpl @Inject constructor(
 
 - **MVP**: 하단 적응형 배너 1개 (모든 화면 공통)
 - 개발 중 — 테스트 광고 ID, 출시 직전 — 실 광고 ID로 BuildConfig flavor 분기
-- `ads/AdBanner.kt` Compose 컴포저블로 래핑 → 다음 앱 그대로 재사용 (양산 자산)
+- `ads/AdBanner.kt` Compose 컴포저블로 래핑 → 다음 앱 그대로 재사용 (공통 자산)
 - 전면 광고는 **v1.1**로 분리 (정책 위반 리스크 사전 방지)
 
 ---
 
-## 8. 다국어 (i18n) — 양산 자산화 핵심
+## 8. 다국어 (i18n) — 재사용 자산화 핵심
 
 - 기본 언어: `ko`
 - 추가 언어: `en` (외국인 타겟)
 - 모든 사용자 가시 문자열은 `res/values/strings.xml` (KO) + `res/values-en/strings.xml` (EN)
-- **하드코딩 금지** — 양산 표준
+- **하드코딩 금지** — 프로젝트 표준
 - Play Console 메타도 한·영 동시 등록 (제목·설명·스크린샷)
 - 시스템 언어 자동 추종 (`compileSdk` 기본 동작)
 
@@ -360,7 +359,7 @@ class AddressRepositoryImpl @Inject constructor(
 3. `core-network`: Retrofit·OkHttp 셋업 + BuildConfig 키 주입 패턴
 4. `core-util`: Clipboard·Share·Haptic·Toast
 5. `core-i18n`: 다국어 셋업 보일러플레이트
-6. **양산 표준 문서 갱신**: `project_app_factory_standards.md`에 새 표준 즉시 반영
+6. **공통 표준 문서 갱신**: 내부 프로젝트 표준 메모리에 새 표준 즉시 반영
 
 ---
 
