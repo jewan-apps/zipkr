@@ -1,0 +1,8 @@
+root = true
+
+[*.kt]
+indent_style = space
+indent_size = 4
+max_line_length = 120
+# ktlint: Composable 함수는 PascalCase 허용 (Jetpack Compose 공식 컨벤션)
+ktlint_function_naming_ignore_when_annotated_with = Composable
