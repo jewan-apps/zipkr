@@ -1,3 +1,10 @@
 <resources>
-    <string name="app_name">zipkr</string>
+    <string name="app_name">우편번호</string>
+    <string name="search_placeholder">주소를 입력하세요</string>
+    <string name="empty_title">어떤 주소든 입력해보세요</string>
+    <string name="empty_description">도로명·지번·건물명 모두 검색됩니다.</string>
+    <string name="empty_results_title">검색 결과가 없어요</string>
+    <string name="empty_results_description">다른 검색어로 시도해보세요.</string>
+    <string name="copy_toast">%1$s 복사됨</string>
+    <string name="copy_zip_label">우편번호</string>
 </resources>
