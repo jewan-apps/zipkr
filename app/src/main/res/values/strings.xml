@@ -8,8 +8,11 @@
     <string name="copy_toast">%1$s 복사됨</string>
     <string name="copy_zip_label">우편번호</string>
     <string name="copy_zip_action">우편번호 복사</string>
-    <string name="copy_road_label">한글 주소</string>
-    <string name="copy_road_short">한글</string>
+    <string name="copy_zip_short">우편번호</string>
+    <string name="copy_road_label">도로명 주소</string>
+    <string name="copy_road_short">도로명</string>
+    <string name="copy_jibun_label">지번 주소</string>
+    <string name="copy_jibun_short">지번</string>
     <string name="copy_english_label">영문 주소</string>
     <string name="copy_english_short">영문</string>
     <string name="clear_query_action">검색어 지우기</string>

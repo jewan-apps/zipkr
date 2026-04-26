@@ -46,8 +46,8 @@ private val ZIP_LABEL_SIZE = 10.sp
 private val ZIP_LABEL_TRACKING = 1.5.sp
 private val ZIP_LABEL_BOTTOM_PAD = 4.dp
 
-// CopyBar segment 시각 토큰
-private const val ZIP_SEGMENT_WEIGHT = 1.2f
+// CopyBar segment 시각 토큰 (4 segment: 우편 1.3 · 도로명 1 · 지번 1 · 영문 1)
+private const val ZIP_SEGMENT_WEIGHT = 1.3f
 private const val SECONDARY_SEGMENT_WEIGHT = 1f
 private val SEGMENT_LABEL_SIZE = 12.sp
 private val SEGMENT_VPAD = 14.dp
@@ -74,6 +74,7 @@ fun AddressResultCard(
 ) {
     val zipLabel = stringResource(R.string.copy_zip_label)
     val roadLabel = stringResource(R.string.copy_road_label)
+    val jibunLabel = stringResource(R.string.copy_jibun_label)
     val englishLabel = stringResource(R.string.copy_english_label)
 
     Card(
@@ -89,6 +90,7 @@ fun AddressResultCard(
             CopyBar(
                 onCopyZip = { onCopyAddress(zipLabel, address.zipCode) },
                 onCopyRoad = { onCopyAddress(roadLabel, address.roadAddress) },
+                onCopyJibun = { onCopyAddress(jibunLabel, address.jibunAddress) },
                 onCopyEnglish = { onCopyAddress(englishLabel, address.englishAddress) },
             )
         }
@@ -146,6 +148,7 @@ private fun CardBody(address: Address) {
 private fun CopyBar(
     onCopyZip: () -> Unit,
     onCopyRoad: () -> Unit,
+    onCopyJibun: () -> Unit,
     onCopyEnglish: () -> Unit,
 ) {
     Row(
@@ -171,7 +174,7 @@ private fun CopyBar(
             )
             Spacer(Modifier.width(SEGMENT_ICON_GAP))
             Text(
-                text = stringResource(R.string.copy_zip_action),
+                text = stringResource(R.string.copy_zip_short),
                 fontSize = SEGMENT_LABEL_SIZE,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -180,6 +183,12 @@ private fun CopyBar(
         SecondarySegment(
             label = stringResource(R.string.copy_road_short),
             onClick = onCopyRoad,
+            modifier = Modifier.weight(SECONDARY_SEGMENT_WEIGHT),
+        )
+        SegmentDivider()
+        SecondarySegment(
+            label = stringResource(R.string.copy_jibun_short),
+            onClick = onCopyJibun,
             modifier = Modifier.weight(SECONDARY_SEGMENT_WEIGHT),
         )
         SegmentDivider()
