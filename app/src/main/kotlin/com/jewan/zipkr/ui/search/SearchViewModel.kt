@@ -89,13 +89,44 @@ class SearchViewModel
                     query.length >= MIN_QUERY_LEN
             if (!canLoad) return
 
-            _uiState.value = _uiState.value.copy(phase = current.copy(isLoadingMore = true))
+            // 재시도 케이스를 위해 loadMoreError도 함께 reset한다.
+            _uiState.value =
+                _uiState.value.copy(
+                    phase = current.copy(isLoadingMore = true, loadMoreError = null),
+                )
             loadMoreJob =
                 viewModelScope.launch {
                     val result = repository.search(query, page = current.currentPage + 1, pageSize = PAGE_SIZE)
-                    _uiState.value = _uiState.value.copy(phase = mapPhase(result, accumulated = current.results))
+                    val nextPhase = mapLoadMore(result, current)
+                    _uiState.value = _uiState.value.copy(phase = nextPhase)
                 }
         }
+
+        /**
+         * loadMore 결과를 누적 results에 머지한다.
+         * 실패 시에도 기존 results를 유지하고 loadMoreError만 설정해 사용자가 보던 결과가 사라지지 않게 한다.
+         */
+        private fun mapLoadMore(
+            result: Result<AddressPage>,
+            current: SearchUiState.Phase.Success,
+        ): SearchUiState.Phase =
+            when (result) {
+                is Result.Success -> {
+                    val page = result.value
+                    current.copy(
+                        results = current.results + page.items,
+                        currentPage = page.currentPage,
+                        hasNext = page.hasNext(PAGE_SIZE),
+                        isLoadingMore = false,
+                        loadMoreError = null,
+                    )
+                }
+                is Result.Failure ->
+                    current.copy(
+                        isLoadingMore = false,
+                        loadMoreError = result.error,
+                    )
+            }
 
         private fun runSearch(query: String) {
             inFlight?.cancel()

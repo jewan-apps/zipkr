@@ -20,6 +20,9 @@ data class SearchUiState(
             val currentPage: Int,
             val hasNext: Boolean,
             val isLoadingMore: Boolean = false,
+            // page 2+ fetch 실패 시 누적 results는 유지하고 본 필드만 채운다.
+            // 사용자가 보던 결과를 잃지 않으면서 마지막 행에 작은 에러+재시도를 띄울 수 있다.
+            val loadMoreError: AppError? = null,
         ) : Phase
 
         data object Empty : Phase

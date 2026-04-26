@@ -20,9 +20,11 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -246,23 +248,55 @@ private fun SearchResultsList(
             )
         }
         if (phase.isLoadingMore) {
-            item {
-                Box(
-                    modifier = Modifier.fillMaxWidth().padding(ZipkrSpacing.md),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                }
-            }
+            item { LoadMoreSpinner() }
+        } else if (phase.loadMoreError != null) {
+            item { LoadMoreRetry(onClick = onLoadMore) }
         }
     }
 
+    AutoLoadMoreEffect(listState = listState, phase = phase, onLoadMore = onLoadMore)
+}
+
+@Composable
+private fun LoadMoreSpinner() {
+    Box(
+        modifier = Modifier.fillMaxWidth().padding(ZipkrSpacing.md),
+        contentAlignment = Alignment.Center,
+    ) {
+        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+    }
+}
+
+@Composable
+private fun LoadMoreRetry(onClick: () -> Unit) {
+    // page 2+ 실패는 누적 results를 유지한 채 마지막 행에만 작은 에러+재시도를 표시한다.
+    TextButton(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth().padding(ZipkrSpacing.md),
+    ) {
+        Text(
+            text = stringResource(R.string.load_more_retry),
+            color = MaterialTheme.colorScheme.error,
+        )
+    }
+}
+
+@Composable
+private fun AutoLoadMoreEffect(
+    listState: androidx.compose.foundation.lazy.LazyListState,
+    phase: SearchUiState.Phase.Success,
+    onLoadMore: () -> Unit,
+) {
     // 마지막 행에서 PREFETCH_THRESHOLD번째 전부터 다음 page를 미리 fetch한다 (UX 부드러움).
+    // loadMoreError가 있을 땐 자동 prefetch 멈추고 사용자가 재시도 버튼을 누를 때까지 기다린다.
     val shouldLoadMore by remember {
         derivedStateOf {
             val info = listState.layoutInfo
             val lastVisible = info.visibleItemsInfo.lastOrNull()?.index ?: 0
-            phase.hasNext && !phase.isLoadingMore && lastVisible >= phase.results.size - PREFETCH_THRESHOLD
+            phase.hasNext &&
+                !phase.isLoadingMore &&
+                phase.loadMoreError == null &&
+                lastVisible >= phase.results.size - PREFETCH_THRESHOLD
         }
     }
     LaunchedEffect(shouldLoadMore) {
