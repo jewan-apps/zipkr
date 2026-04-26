@@ -2,8 +2,8 @@ package com.jewan.zipkr.data.provider.juso
 
 import com.jewan.zipkr.data.Address
 import com.jewan.zipkr.data.AppError
+import com.jewan.zipkr.data.Result
 import com.jewan.zipkr.data.provider.AddressProvider
-import com.jewan.zipkr.data.provider.Result
 import timber.log.Timber
 import java.io.IOException
 import javax.inject.Inject
@@ -27,13 +27,9 @@ class JusoApiProvider
                 if (errorCode == SUCCESS_CODE) {
                     Result.Success(response.results.juso.map { it.toDomain() })
                 } else {
+                    // 원문 errorMessage는 Timber 로그까지만 남기고 도메인 타입에는 담지 않는다 (헌법 §1.9).
                     Timber.w("Juso API non-success: code=%s msg=%s", errorCode, response.results.common.errorMessage)
-                    Result.Failure(
-                        AppError.ApiBadResponse(
-                            code = errorCode,
-                            message = response.results.common.errorMessage,
-                        ),
-                    )
+                    Result.Failure(AppError.ApiBadResponse(code = errorCode))
                 }
             } catch (io: IOException) {
                 Timber.w(io, "Juso API network failure")

@@ -1,7 +1,6 @@
 package com.jewan.zipkr.data
 
 import com.jewan.zipkr.data.provider.AddressProvider
-import com.jewan.zipkr.data.provider.Result
 import javax.inject.Inject
 
 /**

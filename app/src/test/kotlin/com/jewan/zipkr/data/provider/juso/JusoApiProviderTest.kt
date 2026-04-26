@@ -2,7 +2,7 @@ package com.jewan.zipkr.data.provider.juso
 
 import com.google.common.truth.Truth.assertThat
 import com.jewan.zipkr.data.AppError
-import com.jewan.zipkr.data.provider.Result
+import com.jewan.zipkr.data.Result
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest

@@ -1,7 +1,7 @@
 package com.jewan.zipkr.data.provider
 
 import com.jewan.zipkr.data.Address
-import com.jewan.zipkr.data.AppError
+import com.jewan.zipkr.data.Result
 
 /**
  * 외부 데이터 소스의 일반화 인터페이스이다.
@@ -9,17 +9,4 @@ import com.jewan.zipkr.data.AppError
  */
 interface AddressProvider {
     suspend fun search(query: String): Result<List<Address>>
-}
-
-/**
- * 도메인 에러를 포함한 결과 타입이다.
- */
-sealed class Result<out T> {
-    data class Success<T>(
-        val value: T,
-    ) : Result<T>()
-
-    data class Failure(
-        val error: AppError,
-    ) : Result<Nothing>()
 }
