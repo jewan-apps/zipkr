@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jewan.zipkr.R
+import com.jewan.zipkr.data.AppError
 import com.jewan.zipkr.ui.components.AddressResultCard
 import com.jewan.zipkr.ui.components.EmptyState
 import com.jewan.zipkr.ui.components.ErrorView
@@ -99,6 +100,17 @@ fun SearchScreen(
     }
 }
 
+/**
+ * AppError type을 strings.xml 리소스 키로 매핑한다.
+ * ViewModel은 type만 보내고, 본 함수에서 사용자 가시 문자열을 결정해 i18n 시 strings-en.xml 추가만으로 EN 대응이 끝난다.
+ */
+private fun errorMessageRes(error: AppError): Int =
+    when (error) {
+        is AppError.Network -> R.string.error_network
+        is AppError.ApiBadResponse -> R.string.error_api
+        is AppError.Unknown -> R.string.error_unknown
+    }
+
 @Composable
 private fun SearchBar(
     query: String,
@@ -139,7 +151,7 @@ private fun SearchBody(
             )
         is SearchUiState.Phase.Error ->
             ErrorView(
-                message = phase.message,
+                message = stringResource(errorMessageRes(phase.error)),
                 onRetry = onRetry,
             )
         is SearchUiState.Phase.Success ->

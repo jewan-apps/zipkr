@@ -7,4 +7,9 @@
     <string name="empty_results_description">다른 검색어로 시도해보세요.</string>
     <string name="copy_toast">%1$s 복사됨</string>
     <string name="copy_zip_label">우편번호</string>
+
+    <!-- 에러 메시지: ViewModel은 AppError type만 보내고, Composable이 본 키로 매핑한다. -->
+    <string name="error_network">인터넷 연결을 확인해주세요</string>
+    <string name="error_api">검색 서비스가 일시적으로 불안정합니다</string>
+    <string name="error_unknown">잠시 후 다시 시도해주세요</string>
 </resources>

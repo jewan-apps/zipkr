@@ -2,8 +2,8 @@ package com.jewan.zipkr.ui.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jewan.zipkr.data.Address
 import com.jewan.zipkr.data.AddressRepository
-import com.jewan.zipkr.data.AppError
 import com.jewan.zipkr.data.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
@@ -74,7 +74,7 @@ class SearchViewModel
                 }
         }
 
-        private fun mapPhase(result: Result<List<com.jewan.zipkr.data.Address>>): SearchUiState.Phase =
+        private fun mapPhase(result: Result<List<Address>>): SearchUiState.Phase =
             when (result) {
                 is Result.Success -> {
                     if (result.value.isEmpty()) {
@@ -83,14 +83,8 @@ class SearchViewModel
                         SearchUiState.Phase.Success(result.value)
                     }
                 }
-                is Result.Failure -> SearchUiState.Phase.Error(mapErrorMessage(result.error))
-            }
-
-        private fun mapErrorMessage(error: AppError): String =
-            when (error) {
-                is AppError.Network -> "인터넷 연결을 확인해주세요"
-                is AppError.ApiBadResponse -> "검색 서비스가 일시적으로 불안정합니다"
-                is AppError.Unknown -> "잠시 후 다시 시도해주세요"
+                // AppError 자체를 보존한다 — 사용자 메시지는 Composable에서 stringResource로 매핑.
+                is Result.Failure -> SearchUiState.Phase.Error(result.error)
             }
 
         private companion object {
