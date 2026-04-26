@@ -25,71 +25,76 @@ import javax.inject.Inject
  */
 @OptIn(FlowPreview::class)
 @HiltViewModel
-class SearchViewModel @Inject constructor(
-    private val repository: AddressRepository,
-) : ViewModel() {
+class SearchViewModel
+    @Inject
+    constructor(
+        private val repository: AddressRepository,
+    ) : ViewModel() {
+        private val _uiState = MutableStateFlow(SearchUiState())
+        val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
 
-    private val _uiState = MutableStateFlow(SearchUiState())
-    val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
+        private val queryFlow = MutableStateFlow("")
+        private var inFlight: Job? = null
 
-    private val queryFlow = MutableStateFlow("")
-    private var inFlight: Job? = null
-
-    init {
-        viewModelScope.launch {
-            queryFlow
-                .debounce(DEBOUNCE_MS)
-                .distinctUntilChanged()
-                .filter { it.length >= MIN_QUERY_LEN }
-                .onEach { runSearch(it) }
-                .collect { /* no-op */ }
-        }
-    }
-
-    fun onQueryChange(query: String) {
-        _uiState.value = _uiState.value.copy(query = query)
-        queryFlow.value = query
-        if (query.length < MIN_QUERY_LEN) {
-            _uiState.value = _uiState.value.copy(phase = SearchUiState.Phase.Idle)
-        }
-    }
-
-    /** 사용자가 명시적으로 즉시 검색을 누른 경우이다. */
-    fun searchNow() {
-        runSearch(_uiState.value.query)
-    }
-
-    private fun runSearch(query: String) {
-        inFlight?.cancel()
-        if (query.isBlank()) {
-            _uiState.value = _uiState.value.copy(phase = SearchUiState.Phase.Idle)
-            return
-        }
-        _uiState.value = _uiState.value.copy(phase = SearchUiState.Phase.Loading)
-        inFlight = viewModelScope.launch {
-            val result = repository.search(query)
-            _uiState.value = _uiState.value.copy(phase = mapPhase(result))
-        }
-    }
-
-    private fun mapPhase(result: Result<List<com.jewan.zipkr.data.Address>>): SearchUiState.Phase {
-        return when (result) {
-            is Result.Success -> {
-                if (result.value.isEmpty()) SearchUiState.Phase.Empty
-                else SearchUiState.Phase.Success(result.value)
+        init {
+            viewModelScope.launch {
+                queryFlow
+                    .debounce(DEBOUNCE_MS)
+                    .distinctUntilChanged()
+                    .filter { it.length >= MIN_QUERY_LEN }
+                    .onEach { runSearch(it) }
+                    .collect { /* no-op */ }
             }
-            is Result.Failure -> SearchUiState.Phase.Error(mapErrorMessage(result.error))
+        }
+
+        fun onQueryChange(query: String) {
+            _uiState.value = _uiState.value.copy(query = query)
+            queryFlow.value = query
+            if (query.length < MIN_QUERY_LEN) {
+                _uiState.value = _uiState.value.copy(phase = SearchUiState.Phase.Idle)
+            }
+        }
+
+        /** 사용자가 명시적으로 즉시 검색을 누른 경우이다. */
+        fun searchNow() {
+            runSearch(_uiState.value.query)
+        }
+
+        private fun runSearch(query: String) {
+            inFlight?.cancel()
+            if (query.isBlank()) {
+                _uiState.value = _uiState.value.copy(phase = SearchUiState.Phase.Idle)
+                return
+            }
+            _uiState.value = _uiState.value.copy(phase = SearchUiState.Phase.Loading)
+            inFlight =
+                viewModelScope.launch {
+                    val result = repository.search(query)
+                    _uiState.value = _uiState.value.copy(phase = mapPhase(result))
+                }
+        }
+
+        private fun mapPhase(result: Result<List<com.jewan.zipkr.data.Address>>): SearchUiState.Phase =
+            when (result) {
+                is Result.Success -> {
+                    if (result.value.isEmpty()) {
+                        SearchUiState.Phase.Empty
+                    } else {
+                        SearchUiState.Phase.Success(result.value)
+                    }
+                }
+                is Result.Failure -> SearchUiState.Phase.Error(mapErrorMessage(result.error))
+            }
+
+        private fun mapErrorMessage(error: AppError): String =
+            when (error) {
+                is AppError.Network -> "인터넷 연결을 확인해주세요"
+                is AppError.ApiBadResponse -> "검색 서비스가 일시적으로 불안정합니다"
+                is AppError.Unknown -> "잠시 후 다시 시도해주세요"
+            }
+
+        private companion object {
+            const val DEBOUNCE_MS = 400L
+            const val MIN_QUERY_LEN = 2
         }
     }
-
-    private fun mapErrorMessage(error: AppError): String = when (error) {
-        is AppError.Network -> "인터넷 연결을 확인해주세요"
-        is AppError.ApiBadResponse -> "검색 서비스가 일시적으로 불안정합니다"
-        is AppError.Unknown -> "잠시 후 다시 시도해주세요"
-    }
-
-    private companion object {
-        const val DEBOUNCE_MS = 400L
-        const val MIN_QUERY_LEN = 2
-    }
-}

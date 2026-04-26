@@ -34,9 +34,10 @@ fun AddressResultCard(
     modifier: Modifier = Modifier,
 ) {
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onCardClick),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clickable(onClick = onCardClick),
         shape = MaterialTheme.shapes.medium,
     ) {
         Row(
@@ -74,12 +75,13 @@ fun AddressResultCard(
 private fun AddressResultCardPreview() {
     ZipkrTheme {
         AddressResultCard(
-            address = Address(
-                zipCode = "06234",
-                roadAddress = "서울특별시 강남구 테헤란로 123",
-                jibunAddress = "역삼동 736-1",
-                englishAddress = "123, Teheran-ro, Gangnam-gu, Seoul",
-            ),
+            address =
+                Address(
+                    zipCode = "06234",
+                    roadAddress = "서울특별시 강남구 테헤란로 123",
+                    jibunAddress = "역삼동 736-1",
+                    englishAddress = "123, Teheran-ro, Gangnam-gu, Seoul",
+                ),
             onCardClick = {},
             onCopyZip = {},
         )

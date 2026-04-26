@@ -11,9 +11,17 @@ data class SearchUiState(
 ) {
     sealed interface Phase {
         data object Idle : Phase
+
         data object Loading : Phase
-        data class Success(val results: List<Address>) : Phase
+
+        data class Success(
+            val results: List<Address>,
+        ) : Phase
+
         data object Empty : Phase
-        data class Error(val message: String) : Phase
+
+        data class Error(
+            val message: String,
+        ) : Phase
     }
 }

@@ -20,7 +20,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SearchViewModelTest {
-
     private val repository: AddressRepository = mockk()
     private lateinit var viewModel: SearchViewModel
 
@@ -36,51 +35,55 @@ class SearchViewModelTest {
     }
 
     @Test
-    fun `초기 상태는 Idle이다`() = runTest {
-        viewModel.uiState.test {
-            val first = awaitItem()
-            assertThat(first.query).isEmpty()
-            assertThat(first.phase).isEqualTo(SearchUiState.Phase.Idle)
+    fun `초기 상태는 Idle이다`() =
+        runTest {
+            viewModel.uiState.test {
+                val first = awaitItem()
+                assertThat(first.query).isEmpty()
+                assertThat(first.phase).isEqualTo(SearchUiState.Phase.Idle)
+            }
         }
-    }
 
     @Test
-    fun `검색 결과가 있으면 Success가 된다`() = runTest {
-        val list = listOf(Address("06234", "도로명", "지번", "Eng"))
-        coEvery { repository.search("강남") } returns Result.Success(list)
+    fun `검색 결과가 있으면 Success가 된다`() =
+        runTest {
+            val list = listOf(Address("06234", "도로명", "지번", "Eng"))
+            coEvery { repository.search("강남") } returns Result.Success(list)
 
-        viewModel.onQueryChange("강남")
-        viewModel.searchNow()
+            viewModel.onQueryChange("강남")
+            viewModel.searchNow()
 
-        viewModel.uiState.test {
-            val state = awaitItem()
-            val phase = state.phase as SearchUiState.Phase.Success
-            assertThat(phase.results).isEqualTo(list)
+            viewModel.uiState.test {
+                val state = awaitItem()
+                val phase = state.phase as SearchUiState.Phase.Success
+                assertThat(phase.results).isEqualTo(list)
+            }
         }
-    }
 
     @Test
-    fun `검색 결과가 비면 Empty가 된다`() = runTest {
-        coEvery { repository.search("zzz") } returns Result.Success(emptyList())
+    fun `검색 결과가 비면 Empty가 된다`() =
+        runTest {
+            coEvery { repository.search("zzz") } returns Result.Success(emptyList())
 
-        viewModel.onQueryChange("zzz")
-        viewModel.searchNow()
+            viewModel.onQueryChange("zzz")
+            viewModel.searchNow()
 
-        viewModel.uiState.test {
-            assertThat(awaitItem().phase).isEqualTo(SearchUiState.Phase.Empty)
+            viewModel.uiState.test {
+                assertThat(awaitItem().phase).isEqualTo(SearchUiState.Phase.Empty)
+            }
         }
-    }
 
     @Test
-    fun `네트워크 실패면 Error가 된다`() = runTest {
-        coEvery { repository.search("강남") } returns Result.Failure(AppError.Network())
+    fun `네트워크 실패면 Error가 된다`() =
+        runTest {
+            coEvery { repository.search("강남") } returns Result.Failure(AppError.Network())
 
-        viewModel.onQueryChange("강남")
-        viewModel.searchNow()
+            viewModel.onQueryChange("강남")
+            viewModel.searchNow()
 
-        viewModel.uiState.test {
-            val phase = awaitItem().phase
-            assertThat(phase).isInstanceOf(SearchUiState.Phase.Error::class.java)
+            viewModel.uiState.test {
+                val phase = awaitItem().phase
+                assertThat(phase).isInstanceOf(SearchUiState.Phase.Error::class.java)
+            }
         }
-    }
 }

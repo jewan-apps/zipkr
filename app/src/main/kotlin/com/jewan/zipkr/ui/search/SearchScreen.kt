@@ -65,19 +65,18 @@ fun SearchScreen(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }) },
     ) { padding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(16.dp),
         ) {
             OutlinedTextField(
                 value = state.query,
                 onValueChange = viewModel::onQueryChange,
                 placeholder = { Text(stringResource(R.string.search_placeholder)) },
                 singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(focus),
+                modifier = Modifier.fillMaxWidth().focusRequester(focus),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             )
             SearchBody(
@@ -102,29 +101,33 @@ private fun SearchBody(
     onRetry: () -> Unit,
 ) {
     when (phase) {
-        SearchUiState.Phase.Idle -> EmptyState(
-            title = stringResource(R.string.empty_title),
-            description = stringResource(R.string.empty_description),
-        )
+        SearchUiState.Phase.Idle ->
+            EmptyState(
+                title = stringResource(R.string.empty_title),
+                description = stringResource(R.string.empty_description),
+            )
         SearchUiState.Phase.Loading -> LoadingSkeleton()
-        SearchUiState.Phase.Empty -> EmptyState(
-            title = stringResource(R.string.empty_results_title),
-            description = stringResource(R.string.empty_results_description),
-        )
-        is SearchUiState.Phase.Error -> ErrorView(
-            message = phase.message,
-            onRetry = onRetry,
-        )
-        is SearchUiState.Phase.Success -> LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            items(phase.results) { address ->
-                AddressResultCard(
-                    address = address,
-                    onCardClick = { onCardClick(address.zipCode) },
-                    onCopyZip = { onCopyZip(address.zipCode) },
-                )
+        SearchUiState.Phase.Empty ->
+            EmptyState(
+                title = stringResource(R.string.empty_results_title),
+                description = stringResource(R.string.empty_results_description),
+            )
+        is SearchUiState.Phase.Error ->
+            ErrorView(
+                message = phase.message,
+                onRetry = onRetry,
+            )
+        is SearchUiState.Phase.Success ->
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(phase.results) { address ->
+                    AddressResultCard(
+                        address = address,
+                        onCardClick = { onCardClick(address.zipCode) },
+                        onCopyZip = { onCopyZip(address.zipCode) },
+                    )
+                }
             }
-        }
     }
 }

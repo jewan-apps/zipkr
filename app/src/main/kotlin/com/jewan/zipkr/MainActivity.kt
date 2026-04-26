@@ -17,7 +17,7 @@ class MainActivity : ComponentActivity() {
             ZipkrTheme {
                 SearchScreen(
                     // Phase 4에서 상세 화면 네비게이션으로 교체된다.
-                    onCardClick = { /* TODO: Phase 4 detail navigation */ },
+                    onCardClick = { /* Phase 4에서 detail navigation 연결 예정 */ },
                 )
             }
         }
