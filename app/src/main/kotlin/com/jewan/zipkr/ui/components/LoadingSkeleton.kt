@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,6 +20,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.jewan.zipkr.ui.theme.ZipkrSpacing
 import com.jewan.zipkr.ui.theme.ZipkrTheme
 
 /**
@@ -33,8 +33,8 @@ fun LoadingSkeleton(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.fillMaxWidth().padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier.fillMaxWidth().padding(ZipkrSpacing.md),
+        verticalArrangement = Arrangement.spacedBy(ZipkrSpacing.md),
     ) {
         repeat(cardCount) { SkeletonCard() }
     }
@@ -53,15 +53,15 @@ private fun SkeletonCard() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(MaterialTheme.shapes.medium)
             .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(16.dp)
+            .padding(ZipkrSpacing.md)
             .alpha(alpha),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(ZipkrSpacing.sm),
     ) {
-        Spacer(Modifier.fillMaxWidth().height(16.dp).clip(RoundedCornerShape(4.dp)).background(MaterialTheme.colorScheme.outline))
-        Spacer(Modifier.fillMaxWidth(0.7f).height(12.dp).clip(RoundedCornerShape(4.dp)).background(MaterialTheme.colorScheme.outline))
-        Spacer(Modifier.fillMaxWidth(0.5f).height(12.dp).clip(RoundedCornerShape(4.dp)).background(MaterialTheme.colorScheme.outline))
+        Spacer(Modifier.fillMaxWidth().height(16.dp).clip(MaterialTheme.shapes.extraSmall).background(MaterialTheme.colorScheme.outline))
+        Spacer(Modifier.fillMaxWidth(0.7f).height(12.dp).clip(MaterialTheme.shapes.extraSmall).background(MaterialTheme.colorScheme.outline))
+        Spacer(Modifier.fillMaxWidth(0.5f).height(12.dp).clip(MaterialTheme.shapes.extraSmall).background(MaterialTheme.colorScheme.outline))
     }
 }
 

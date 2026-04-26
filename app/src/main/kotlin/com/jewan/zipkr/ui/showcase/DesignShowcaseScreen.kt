@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -28,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.jewan.zipkr.ui.components.EmptyState
 import com.jewan.zipkr.ui.components.ErrorView
 import com.jewan.zipkr.ui.components.LoadingSkeleton
+import com.jewan.zipkr.ui.theme.ZipkrSpacing
 import com.jewan.zipkr.ui.theme.ZipkrTheme
 
 /**
@@ -45,8 +45,8 @@ fun DesignShowcaseScreen(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp),
+                .padding(ZipkrSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(ZipkrSpacing.lg),
         ) {
             SectionHeader("우편번호 — Design Showcase")
             ColorSection()
@@ -69,9 +69,9 @@ private fun SubHeader(text: String) {
 
 @Composable
 private fun ColorSection() {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(ZipkrSpacing.sm)) {
         SubHeader("Colors")
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(ZipkrSpacing.sm)) {
             ColorSwatch("Primary", MaterialTheme.colorScheme.primary)
             ColorSwatch("Surface", MaterialTheme.colorScheme.surface)
             ColorSwatch("Variant", MaterialTheme.colorScheme.surfaceVariant)
@@ -86,17 +86,17 @@ private fun ColorSwatch(name: String, color: Color) {
         Box(
             modifier = Modifier
                 .size(56.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .clip(MaterialTheme.shapes.medium)
                 .background(color),
         )
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(ZipkrSpacing.xs))
         Text(text = name, style = MaterialTheme.typography.bodySmall)
     }
 }
 
 @Composable
 private fun TypographySection() {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(ZipkrSpacing.sm)) {
         SubHeader("Typography")
         Text("displayLarge 가나다 ABC 06234", style = MaterialTheme.typography.displayLarge)
         Text("headlineLarge 가나다 ABC 06234", style = MaterialTheme.typography.headlineLarge)
@@ -109,14 +109,20 @@ private fun TypographySection() {
 
 @Composable
 private fun ShapeSection() {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        SubHeader("Shapes (4 / 8 / 16 / 24 / 32 dp)")
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf(4, 8, 16, 24, 32).forEach { radius ->
+    Column(verticalArrangement = Arrangement.spacedBy(ZipkrSpacing.sm)) {
+        SubHeader("Shapes (extraSmall / small / medium / large / extraLarge)")
+        Row(horizontalArrangement = Arrangement.spacedBy(ZipkrSpacing.sm)) {
+            listOf(
+                MaterialTheme.shapes.extraSmall,
+                MaterialTheme.shapes.small,
+                MaterialTheme.shapes.medium,
+                MaterialTheme.shapes.large,
+                MaterialTheme.shapes.extraLarge,
+            ).forEach { shape ->
                 Box(
                     modifier = Modifier
                         .size(48.dp)
-                        .clip(RoundedCornerShape(radius.dp))
+                        .clip(shape)
                         .background(MaterialTheme.colorScheme.primary),
                 )
             }
@@ -126,7 +132,7 @@ private fun ShapeSection() {
 
 @Composable
 private fun ComponentSection() {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(ZipkrSpacing.md)) {
         SubHeader("Components")
         EmptyState(
             title = "어떤 주소든 입력해보세요",
