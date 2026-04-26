@@ -28,7 +28,6 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jewan.zipkr.R
@@ -37,6 +36,7 @@ import com.jewan.zipkr.ui.components.AddressResultCard
 import com.jewan.zipkr.ui.components.EmptyState
 import com.jewan.zipkr.ui.components.ErrorView
 import com.jewan.zipkr.ui.components.LoadingSkeleton
+import com.jewan.zipkr.ui.theme.ZipkrSpacing
 import com.jewan.zipkr.util.copyToClipboard
 import com.jewan.zipkr.util.lightHaptic
 
@@ -72,7 +72,7 @@ fun SearchScreen(
                 Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .padding(16.dp),
+                    .padding(ZipkrSpacing.md),
         ) {
             SearchBar(
                 query = state.query,
@@ -156,7 +156,7 @@ private fun SearchBody(
             )
         is SearchUiState.Phase.Success ->
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(ZipkrSpacing.sm),
             ) {
                 items(phase.results) { address ->
                     AddressResultCard(

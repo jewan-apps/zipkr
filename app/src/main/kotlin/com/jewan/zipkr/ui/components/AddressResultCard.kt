@@ -16,15 +16,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import com.jewan.zipkr.R
 import com.jewan.zipkr.data.Address
+import com.jewan.zipkr.ui.theme.ZipkrSpacing
 import com.jewan.zipkr.ui.theme.ZipkrTheme
 
 /**
  * 검색 결과 단일 카드이다.
  * - 카드 자체 탭 → 상세 화면 진입.
  * - 우측 복사 아이콘 탭 → 우편번호만 즉시 클립보드 복사 (즉시성 동선 핵심).
+ * - 도로명·지번·우편번호 점보·영문주소 4 항목 모두 노출 (spec §3 결과 리스트 정의).
  */
 @Composable
 fun AddressResultCard(
@@ -41,14 +44,19 @@ fun AddressResultCard(
         shape = MaterialTheme.shapes.medium,
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(ZipkrSpacing.md),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(ZipkrSpacing.xs),
             ) {
                 Text(text = address.roadAddress, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = address.jibunAddress,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 Text(
                     text = "📮 ${address.zipCode}",
                     style = MaterialTheme.typography.bodyLarge,
@@ -63,7 +71,7 @@ fun AddressResultCard(
             IconButton(onClick = onCopyZip) {
                 Icon(
                     imageVector = Icons.Outlined.ContentCopy,
-                    contentDescription = "우편번호 복사",
+                    contentDescription = stringResource(R.string.copy_zip_action),
                 )
             }
         }

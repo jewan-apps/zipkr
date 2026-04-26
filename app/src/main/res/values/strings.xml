@@ -7,6 +7,7 @@
     <string name="empty_results_description">다른 검색어로 시도해보세요.</string>
     <string name="copy_toast">%1$s 복사됨</string>
     <string name="copy_zip_label">우편번호</string>
+    <string name="copy_zip_action">우편번호 복사</string>
 
     <!-- 에러 메시지: ViewModel은 AppError type만 보내고, Composable이 본 키로 매핑한다. -->
     <string name="error_network">인터넷 연결을 확인해주세요</string>
