@@ -23,6 +23,8 @@ data class JusoResults(
 data class JusoCommon(
     val errorCode: String,
     val errorMessage: String,
+    // 행안부 API는 totalCount를 String으로 반환한다. toIntOrNull()로 파싱은 Provider 단에서 수행한다.
+    val totalCount: String = "0",
 )
 
 @Serializable

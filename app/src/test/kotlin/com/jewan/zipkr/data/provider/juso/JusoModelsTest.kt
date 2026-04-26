@@ -1,6 +1,7 @@
 package com.jewan.zipkr.data.provider.juso
 
 import com.google.common.truth.Truth.assertThat
+import com.jewan.zipkr.data.AddressPage
 import org.junit.Test
 
 class JusoModelsTest {
@@ -27,7 +28,7 @@ class JusoModelsTest {
             JusoSearchResponse(
                 results =
                     JusoResults(
-                        common = JusoCommon(errorCode = "0", errorMessage = "정상"),
+                        common = JusoCommon(errorCode = "0", errorMessage = "정상", totalCount = "1"),
                         juso =
                             listOf(
                                 JusoAddressDto(
@@ -41,5 +42,34 @@ class JusoModelsTest {
             )
         assertThat(response.results.common.errorCode).isEqualTo("0")
         assertThat(response.results.juso).hasSize(1)
+        // totalCount 필드 파싱 검증이다.
+        assertThat(response.results.common.totalCount).isEqualTo("1")
+    }
+
+    @Test
+    fun `AddressPage hasNext는 currentPage x pageSize가 totalCount보다 작을 때만 true이다`() {
+        val pageWithMore =
+            AddressPage(
+                items = emptyList(),
+                currentPage = 1,
+                totalCount = 100,
+            )
+        val pageNoMore =
+            AddressPage(
+                items = emptyList(),
+                currentPage = 2,
+                totalCount = 100,
+            )
+
+        assertThat(pageWithMore.hasNext(pageSize = 50)).isTrue()
+        assertThat(pageNoMore.hasNext(pageSize = 50)).isFalse()
+    }
+
+    @Test
+    fun `totalCount가 없는 JusoCommon은 기본값 0을 갖는다`() {
+        val common = JusoCommon(errorCode = "0", errorMessage = "정상")
+
+        // 기본값 방어이다. 구버전 API 호환 시 0으로 처리되어 더 이상 페이지 없음으로 취급된다.
+        assertThat(common.totalCount).isEqualTo("0")
     }
 }

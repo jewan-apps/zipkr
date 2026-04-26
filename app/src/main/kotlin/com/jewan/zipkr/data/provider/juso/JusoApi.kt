@@ -18,6 +18,8 @@ interface JusoApi {
 
     companion object {
         private const val DEFAULT_PAGE = 1
-        private const val DEFAULT_PAGE_SIZE = 10
+
+        // 최대 100, ViewModel의 PAGE_SIZE(50)와 일치시켜 기본값만으로도 동작하게 한다.
+        private const val DEFAULT_PAGE_SIZE = 50
     }
 }

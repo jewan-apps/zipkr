@@ -1,6 +1,6 @@
 package com.jewan.zipkr.data.provider.juso
 
-import com.jewan.zipkr.data.Address
+import com.jewan.zipkr.data.AddressPage
 import com.jewan.zipkr.data.AppError
 import com.jewan.zipkr.data.Result
 import com.jewan.zipkr.data.provider.AddressProvider
@@ -21,30 +21,40 @@ class JusoApiProvider
         @Named(DiQualifiers.JUSO_API_KEY) private val apiKey: String,
     ) : AddressProvider {
         @Suppress("TooGenericExceptionCaught")
-        override suspend fun search(query: String): Result<List<Address>> =
+        override suspend fun search(
+            query: String,
+            page: Int,
+            pageSize: Int,
+        ): Result<AddressPage> =
             try {
-                Timber.d("Juso API request: query=%s", query)
-                val response = api.search(apiKey = apiKey, keyword = query)
+                Timber.d("Juso API request: query=%s page=%d size=%d", query, page, pageSize)
+                val response = api.search(apiKey = apiKey, keyword = query, currentPage = page, countPerPage = pageSize)
                 val common = response.results.common
                 val errorCode = common.errorCode
-                val resultSize = response.results.juso.size
+                val totalCount = common.totalCount.toIntOrNull() ?: 0
                 Timber.d(
-                    "Juso API response: code=%s msg=%s resultSize=%d",
+                    "Juso API response: code=%s msg=%s total=%d",
                     errorCode,
                     common.errorMessage,
-                    resultSize,
+                    totalCount,
                 )
                 if (errorCode == SUCCESS_CODE) {
-                    Result.Success(response.results.juso.map { it.toDomain() })
+                    Result.Success(
+                        AddressPage(
+                            items = response.results.juso.map { it.toDomain() },
+                            currentPage = page,
+                            totalCount = totalCount,
+                        ),
+                    )
                 } else {
                     // 원문 errorMessage는 도메인 타입에 담지 않는다 (헌법 §1.9). Timber 디버그 로그까지만 남는다.
                     Result.Failure(AppError.ApiBadResponse(code = errorCode))
                 }
             } catch (io: IOException) {
-                Timber.w(io, "Juso API network failure: query=%s", query)
+                Timber.w(io, "Juso API network failure: query=%s page=%d", query, page)
                 Result.Failure(AppError.Network(io))
             } catch (t: Throwable) {
-                Timber.e(t, "Juso API unknown failure: query=%s", query)
+                Timber.e(t, "Juso API unknown failure: query=%s page=%d", query, page)
                 Result.Failure(AppError.Unknown(t))
             }
 

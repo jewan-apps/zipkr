@@ -2,7 +2,7 @@ package com.jewan.zipkr.ui.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jewan.zipkr.data.Address
+import com.jewan.zipkr.data.AddressPage
 import com.jewan.zipkr.data.AddressRepository
 import com.jewan.zipkr.data.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,6 +22,7 @@ import javax.inject.Inject
  * 검색 화면의 ViewModel이다.
  * 입력 변경에 debounce 700ms를 적용해 자동 검색을 트리거하며,
  * searchNow()로 즉시 트리거도 지원한다.
+ * 리스트 끝 도달 시 loadMore()를 통해 다음 page를 누적 로드한다.
  */
 @OptIn(FlowPreview::class)
 @HiltViewModel
@@ -35,6 +36,7 @@ class SearchViewModel
 
         private val queryFlow = MutableStateFlow("")
         private var inFlight: Job? = null
+        private var loadMoreJob: Job? = null
 
         // 마지막으로 트리거된 query를 추적해 debounce 흐름과 명시적 트리거(searchNow) 사이의
         // 중복 호출을 차단한다. 사용자가 키보드 돋보기를 누르면 즉시 검색되고, 700ms 후 debounce가
@@ -71,8 +73,64 @@ class SearchViewModel
             runSearch(_uiState.value.query)
         }
 
+        /**
+         * 리스트 끝에 도달했을 때 다음 page를 fetch한다.
+         * 중복 호출 방지: isLoadingMore 상태이거나 hasNext가 false면 즉시 return한다.
+         * loadMoreJob을 추적해 새 query 검색(runSearch)에서 cancel할 수 있다.
+         */
+        fun loadMore() {
+            val current = _uiState.value.phase as? SearchUiState.Phase.Success ?: return
+            val query = _uiState.value.query
+            val canLoad =
+                current.hasNext &&
+                    !current.isLoadingMore &&
+                    query.isNotBlank() &&
+                    query.length >= MIN_QUERY_LEN
+            if (!canLoad) return
+
+            // 재시도 케이스를 위해 loadMoreError도 함께 reset한다.
+            _uiState.value =
+                _uiState.value.copy(
+                    phase = current.copy(isLoadingMore = true, loadMoreError = null),
+                )
+            loadMoreJob =
+                viewModelScope.launch {
+                    val result = repository.search(query, page = current.currentPage + 1, pageSize = PAGE_SIZE)
+                    val nextPhase = mapLoadMore(result, current)
+                    _uiState.value = _uiState.value.copy(phase = nextPhase)
+                }
+        }
+
+        /**
+         * loadMore 결과를 누적 results에 머지한다.
+         * 실패 시에도 기존 results를 유지하고 loadMoreError만 설정해 사용자가 보던 결과가 사라지지 않게 한다.
+         */
+        private fun mapLoadMore(
+            result: Result<AddressPage>,
+            current: SearchUiState.Phase.Success,
+        ): SearchUiState.Phase =
+            when (result) {
+                is Result.Success -> {
+                    val page = result.value
+                    current.copy(
+                        results = current.results + page.items,
+                        currentPage = page.currentPage,
+                        hasNext = page.hasNext(PAGE_SIZE),
+                        isLoadingMore = false,
+                        loadMoreError = null,
+                    )
+                }
+                is Result.Failure ->
+                    current.copy(
+                        isLoadingMore = false,
+                        loadMoreError = result.error,
+                    )
+            }
+
         private fun runSearch(query: String) {
             inFlight?.cancel()
+            // loadMore 진행 중에도 새 query 검색이 들어오면 stale 결과 덮어쓰기를 막기 위해 cancel한다.
+            loadMoreJob?.cancel()
             if (query.isBlank()) {
                 _uiState.value = _uiState.value.copy(phase = SearchUiState.Phase.Idle)
                 return
@@ -87,18 +145,24 @@ class SearchViewModel
             _uiState.value = _uiState.value.copy(phase = SearchUiState.Phase.Loading)
             inFlight =
                 viewModelScope.launch {
-                    val result = repository.search(query)
-                    _uiState.value = _uiState.value.copy(phase = mapPhase(result))
+                    val result = repository.search(query, page = 1, pageSize = PAGE_SIZE)
+                    _uiState.value = _uiState.value.copy(phase = mapFirstPage(result))
                 }
         }
 
-        private fun mapPhase(result: Result<List<Address>>): SearchUiState.Phase =
+        /** 첫 page(runSearch) 결과를 매핑한다. accumulated 없이 단순 변환만 한다. */
+        private fun mapFirstPage(result: Result<AddressPage>): SearchUiState.Phase =
             when (result) {
                 is Result.Success -> {
-                    if (result.value.isEmpty()) {
+                    val page = result.value
+                    if (page.items.isEmpty()) {
                         SearchUiState.Phase.Empty
                     } else {
-                        SearchUiState.Phase.Success(result.value)
+                        SearchUiState.Phase.Success(
+                            results = page.items,
+                            currentPage = page.currentPage,
+                            hasNext = page.hasNext(PAGE_SIZE),
+                        )
                     }
                 }
                 // AppError 자체를 보존한다 — 사용자 메시지는 Composable에서 stringResource로 매핑.
@@ -109,6 +173,9 @@ class SearchViewModel
             // 자동 검색 debounce 시간이다 (한국어 조합 입력을 고려해 700ms로 설정한다).
             const val DEBOUNCE_MS = 700L
             const val MIN_QUERY_LEN = 2
+
+            // 행안부 API 최대 countPerPage는 100이다. 50으로 설정해 네트워크·처리 부담을 줄인다.
+            const val PAGE_SIZE = 50
 
             // 5자리 숫자 입력은 우편번호 역검색 시도로 판단해 별도 Phase로 전환한다.
             // String.matches(Regex)는 full-match라 앵커 불필요.

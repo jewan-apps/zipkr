@@ -12,5 +12,9 @@ class AddressRepositoryImpl
     constructor(
         private val provider: AddressProvider,
     ) : AddressRepository {
-        override suspend fun search(query: String): Result<List<Address>> = provider.search(query)
+        override suspend fun search(
+            query: String,
+            page: Int,
+            pageSize: Int,
+        ): Result<AddressPage> = provider.search(query, page, pageSize)
     }
