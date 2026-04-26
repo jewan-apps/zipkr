@@ -13,10 +13,12 @@
     <string name="error_network">인터넷 연결을 확인해주세요</string>
     <string name="error_api">검색 서비스가 일시적으로 불안정합니다</string>
     <string name="error_unknown">잠시 후 다시 시도해주세요</string>
-    <string name="error_auth">인증 오류가 발생했어요. 잠시 후 다시 시도해주세요</string>
+    <!-- E0001(승인되지 않은 KEY)은 행안부가 단시간 다회 호출(rate limit) 시에도 같은 코드로 위장 응답을 보낸다. 사용자가 "개발자 문의"로 좌절하지 않게 부드럽게 안내한다. -->
+    <string name="error_auth">인증 오류 또는 일시적인 호출 제한이에요. 잠시 후 다시 시도해주세요</string>
     <string name="error_path">정상적인 경로로 접속이 필요해요. 잠시 후 다시 시도해주세요</string>
     <string name="error_empty_query">검색어를 입력해주세요</string>
-    <string name="error_query_too_broad">주소를 더 자세히 입력해주세요 (예: 서울 강남구 테헤란로)</string>
+    <!-- "경기"/"서울" 같이 광역만 단독 입력 시 행안부가 결과 너무 많아 거부(E0006). 두 단어 이상 안내로 회피한다. -->
+    <string name="error_query_too_broad">"경기" "서울" 같이 한 단어만 입력하면 결과가 너무 많아요.\n두 단어 이상 입력해주세요 (예: 경기 수원, 서울 강남구).</string>
     <string name="error_query_too_short">검색어를 한 글자 이상 입력해주세요</string>
     <string name="error_numeric_only">숫자만으로는 검색할 수 없어요. 우편번호 역검색은 v1.1f에서 지원 예정</string>
     <string name="error_invalid_query">검색어에 특수문자나 SQL 예약어는 사용할 수 없어요</string>

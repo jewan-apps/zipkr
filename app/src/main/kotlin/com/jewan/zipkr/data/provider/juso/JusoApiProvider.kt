@@ -23,20 +23,28 @@ class JusoApiProvider
         @Suppress("TooGenericExceptionCaught")
         override suspend fun search(query: String): Result<List<Address>> =
             try {
+                Timber.d("Juso API request: query=%s", query)
                 val response = api.search(apiKey = apiKey, keyword = query)
-                val errorCode = response.results.common.errorCode
+                val common = response.results.common
+                val errorCode = common.errorCode
+                val resultSize = response.results.juso.size
+                Timber.d(
+                    "Juso API response: code=%s msg=%s resultSize=%d",
+                    errorCode,
+                    common.errorMessage,
+                    resultSize,
+                )
                 if (errorCode == SUCCESS_CODE) {
                     Result.Success(response.results.juso.map { it.toDomain() })
                 } else {
-                    // 원문 errorMessage는 Timber 로그까지만 남기고 도메인 타입에는 담지 않는다 (헌법 §1.9).
-                    Timber.w("Juso API non-success: code=%s msg=%s", errorCode, response.results.common.errorMessage)
+                    // 원문 errorMessage는 도메인 타입에 담지 않는다 (헌법 §1.9). Timber 디버그 로그까지만 남는다.
                     Result.Failure(AppError.ApiBadResponse(code = errorCode))
                 }
             } catch (io: IOException) {
-                Timber.w(io, "Juso API network failure")
+                Timber.w(io, "Juso API network failure: query=%s", query)
                 Result.Failure(AppError.Network(io))
             } catch (t: Throwable) {
-                Timber.e(t, "Juso API unknown failure")
+                Timber.e(t, "Juso API unknown failure: query=%s", query)
                 Result.Failure(AppError.Unknown(t))
             }
 
