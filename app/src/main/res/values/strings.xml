@@ -13,4 +13,15 @@
     <string name="error_network">인터넷 연결을 확인해주세요</string>
     <string name="error_api">검색 서비스가 일시적으로 불안정합니다</string>
     <string name="error_unknown">잠시 후 다시 시도해주세요</string>
+    <string name="error_auth">인증 오류가 발생했어요. 잠시 후 다시 시도해주세요</string>
+    <string name="error_path">정상적인 경로로 접속이 필요해요. 잠시 후 다시 시도해주세요</string>
+    <string name="error_empty_query">검색어를 입력해주세요</string>
+    <string name="error_query_too_broad">주소를 더 자세히 입력해주세요 (예: 서울 강남구 테헤란로)</string>
+    <string name="error_query_too_short">검색어를 한 글자 이상 입력해주세요</string>
+    <string name="error_numeric_only">숫자만으로는 검색할 수 없어요. 우편번호 역검색은 v1.1f에서 지원 예정</string>
+    <string name="error_invalid_query">검색어에 특수문자나 SQL 예약어는 사용할 수 없어요</string>
+
+    <!-- 우편번호 역검색 미지원 안내이다. -->
+    <string name="postal_code_unsupported_title">우편번호 역검색은 아직 지원 안 해요</string>
+    <string name="postal_code_unsupported_description">"11823" 같은 우편번호 → 주소 역검색은 v1.1f에서 지원 예정. 도로명·지번·건물명으로 검색해주세요.</string>
 </resources>

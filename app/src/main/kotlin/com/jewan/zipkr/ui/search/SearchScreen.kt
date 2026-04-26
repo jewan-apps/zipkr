@@ -107,8 +107,24 @@ fun SearchScreen(
 private fun errorMessageRes(error: AppError): Int =
     when (error) {
         is AppError.Network -> R.string.error_network
-        is AppError.ApiBadResponse -> R.string.error_api
         is AppError.Unknown -> R.string.error_unknown
+        is AppError.ApiBadResponse -> apiBadResponseMessageRes(error)
+    }
+
+/**
+ * ApiBadResponse errorCode를 세부 strings.xml 키로 매핑한다.
+ * cyclomatic complexity 분산을 위해 별도 함수로 추출한다.
+ */
+private fun apiBadResponseMessageRes(error: AppError.ApiBadResponse): Int =
+    when {
+        error.isAuthError -> R.string.error_auth
+        error.isQueryTooBroad -> R.string.error_query_too_broad
+        error.isQueryTooShort -> R.string.error_query_too_short
+        error.isNumericOnly -> R.string.error_numeric_only
+        error.isInvalidQuery -> R.string.error_invalid_query
+        error.isEmpty -> R.string.error_empty_query
+        error.isPathError -> R.string.error_path
+        else -> R.string.error_api // fallback: 명세 외 코드이다.
     }
 
 @Composable
@@ -148,6 +164,11 @@ private fun SearchBody(
             EmptyState(
                 title = stringResource(R.string.empty_results_title),
                 description = stringResource(R.string.empty_results_description),
+            )
+        SearchUiState.Phase.PostalCodeUnsupported ->
+            EmptyState(
+                title = stringResource(R.string.postal_code_unsupported_title),
+                description = stringResource(R.string.postal_code_unsupported_description),
             )
         is SearchUiState.Phase.Error ->
             ErrorView(
