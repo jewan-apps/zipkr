@@ -2,7 +2,6 @@ package com.jewan.zipkr.ui.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jewan.zipkr.data.Address
 import com.jewan.zipkr.data.AddressPage
 import com.jewan.zipkr.data.AddressRepository
 import com.jewan.zipkr.data.Result
@@ -147,23 +146,20 @@ class SearchViewModel
             inFlight =
                 viewModelScope.launch {
                     val result = repository.search(query, page = 1, pageSize = PAGE_SIZE)
-                    _uiState.value = _uiState.value.copy(phase = mapPhase(result, accumulated = emptyList()))
+                    _uiState.value = _uiState.value.copy(phase = mapFirstPage(result))
                 }
         }
 
-        private fun mapPhase(
-            result: Result<AddressPage>,
-            accumulated: List<Address>,
-        ): SearchUiState.Phase =
+        /** 첫 page(runSearch) 결과를 매핑한다. accumulated 없이 단순 변환만 한다. */
+        private fun mapFirstPage(result: Result<AddressPage>): SearchUiState.Phase =
             when (result) {
                 is Result.Success -> {
                     val page = result.value
-                    val merged = accumulated + page.items
-                    if (merged.isEmpty()) {
+                    if (page.items.isEmpty()) {
                         SearchUiState.Phase.Empty
                     } else {
                         SearchUiState.Phase.Success(
-                            results = merged,
+                            results = page.items,
                             currentPage = page.currentPage,
                             hasNext = page.hasNext(PAGE_SIZE),
                         )

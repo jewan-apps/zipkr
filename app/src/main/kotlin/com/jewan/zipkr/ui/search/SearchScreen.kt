@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
@@ -80,6 +81,16 @@ fun SearchScreen(
         keyboard?.show()
     }
 
+    val callbacks =
+        rememberSearchCallbacks(
+            context = context,
+            view = view,
+            copyToastTemplate = copyToastTemplate,
+            zipLabel = zipLabel,
+            onCardClick = onCardClick,
+            viewModel = viewModel,
+        )
+
     Scaffold(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }) },
     ) { padding ->
@@ -99,23 +110,35 @@ fun SearchScreen(
                 },
                 focus = focus,
             )
-            SearchBody(
-                phase = state.phase,
-                onCopyZip = { zipCode ->
-                    context.copyToClipboard(zipLabel, zipCode)
-                    view.lightHaptic()
-                    // Android 13+ (API 33+)는 시스템이 자동으로 클립보드 토스트를 띄우므로 중복 알림을 막는다.
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                        Toast.makeText(context, copyToastTemplate.format(zipCode), Toast.LENGTH_SHORT).show()
-                    }
-                },
-                onCardClick = onCardClick,
-                onRetry = { viewModel.searchNow() },
-                onLoadMore = viewModel::loadMore,
-            )
+            SearchBody(phase = state.phase, callbacks = callbacks)
         }
     }
 }
+
+@Composable
+private fun rememberSearchCallbacks(
+    context: android.content.Context,
+    view: android.view.View,
+    copyToastTemplate: String,
+    zipLabel: String,
+    onCardClick: (zip: String) -> Unit,
+    viewModel: SearchViewModel,
+): SearchCallbacks =
+    remember(context, view, copyToastTemplate, zipLabel, onCardClick, viewModel) {
+        SearchCallbacks(
+            onCopyZip = { zipCode ->
+                context.copyToClipboard(zipLabel, zipCode)
+                view.lightHaptic()
+                // Android 13+ (API 33+)는 시스템이 자동 클립보드 토스트를 띄우므로 중복을 막는다.
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                    Toast.makeText(context, copyToastTemplate.format(zipCode), Toast.LENGTH_SHORT).show()
+                }
+            },
+            onCardClick = onCardClick,
+            onRetry = viewModel::searchNow,
+            onLoadMore = viewModel::loadMore,
+        )
+    }
 
 /**
  * AppError type을 strings.xml 리소스 키로 매핑한다.
@@ -175,13 +198,21 @@ private fun SearchBar(
     )
 }
 
+/**
+ * SearchBody에 전달하는 콜백 묶음이다.
+ * 헌법 §1.7 인자 4개 룰을 만족하기 위해 data class로 묶고, 각 phase 분기에서 필요한 것만 사용한다.
+ */
+private data class SearchCallbacks(
+    val onCopyZip: (String) -> Unit,
+    val onCardClick: (String) -> Unit,
+    val onRetry: () -> Unit,
+    val onLoadMore: () -> Unit,
+)
+
 @Composable
 private fun SearchBody(
     phase: SearchUiState.Phase,
-    onCopyZip: (String) -> Unit,
-    onCardClick: (String) -> Unit,
-    onRetry: () -> Unit,
-    onLoadMore: () -> Unit,
+    callbacks: SearchCallbacks,
 ) {
     when (phase) {
         SearchUiState.Phase.Idle ->
@@ -210,14 +241,14 @@ private fun SearchBody(
         is SearchUiState.Phase.Error ->
             ErrorView(
                 message = stringResource(errorMessageRes(phase.error)),
-                onRetry = onRetry,
+                onRetry = callbacks.onRetry,
             )
         is SearchUiState.Phase.Success ->
             SearchResultsList(
                 phase = phase,
-                onCopyZip = onCopyZip,
-                onCardClick = onCardClick,
-                onLoadMore = onLoadMore,
+                onCopyZip = callbacks.onCopyZip,
+                onCardClick = callbacks.onCardClick,
+                onLoadMore = callbacks.onLoadMore,
             )
     }
 }
@@ -283,23 +314,22 @@ private fun LoadMoreRetry(onClick: () -> Unit) {
 
 @Composable
 private fun AutoLoadMoreEffect(
-    listState: androidx.compose.foundation.lazy.LazyListState,
+    listState: LazyListState,
     phase: SearchUiState.Phase.Success,
     onLoadMore: () -> Unit,
 ) {
-    // 마지막 행에서 PREFETCH_THRESHOLD번째 전부터 다음 page를 미리 fetch한다 (UX 부드러움).
-    // loadMoreError가 있을 땐 자동 prefetch 멈추고 사용자가 재시도 버튼을 누를 때까지 기다린다.
-    val shouldLoadMore by remember {
+    // scroll 위치 변화만 derivedStateOf로 최적화한다. phase 조건은 LaunchedEffect 키로 정확히 처리해
+    // page 2+ 진행/loadMoreError 발생 시 stale 캡처 없이 즉시 반영되게 한다.
+    val endReached by remember {
         derivedStateOf {
             val info = listState.layoutInfo
             val lastVisible = info.visibleItemsInfo.lastOrNull()?.index ?: 0
-            phase.hasNext &&
-                !phase.isLoadingMore &&
-                phase.loadMoreError == null &&
-                lastVisible >= phase.results.size - PREFETCH_THRESHOLD
+            val total = info.totalItemsCount
+            total > 0 && lastVisible >= total - PREFETCH_THRESHOLD
         }
     }
-    LaunchedEffect(shouldLoadMore) {
-        if (shouldLoadMore) onLoadMore()
+    val readyForMore = phase.hasNext && !phase.isLoadingMore && phase.loadMoreError == null
+    LaunchedEffect(endReached, readyForMore) {
+        if (endReached && readyForMore) onLoadMore()
     }
 }
