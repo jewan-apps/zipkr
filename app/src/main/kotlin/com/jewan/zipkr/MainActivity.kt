@@ -4,16 +4,21 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.jewan.zipkr.ui.showcase.DesignShowcaseScreen
+import com.jewan.zipkr.ui.search.SearchScreen
 import com.jewan.zipkr.ui.theme.ZipkrTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             ZipkrTheme {
-                DesignShowcaseScreen()
+                SearchScreen(
+                    // Phase 4에서 상세 화면 네비게이션으로 교체된다.
+                    onCardClick = { /* Phase 4에서 detail navigation 연결 예정 */ },
+                )
             }
         }
     }

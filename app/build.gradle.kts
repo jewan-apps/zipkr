@@ -63,6 +63,7 @@ android {
 
     sourceSets {
         getByName("main") { java.srcDirs("src/main/kotlin") }
+        getByName("debug") { java.srcDirs("src/debug/kotlin") }
         getByName("test") { java.srcDirs("src/test/kotlin") }
         getByName("androidTest") { java.srcDirs("src/androidTest/kotlin") }
     }
@@ -93,6 +94,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.splashscreen)
 
