@@ -42,10 +42,11 @@ fun DesignShowcaseScreen(modifier: Modifier = Modifier) {
         color = MaterialTheme.colorScheme.background,
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(ZipkrSpacing.md),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(ZipkrSpacing.md),
             verticalArrangement = Arrangement.spacedBy(ZipkrSpacing.lg),
         ) {
             SectionHeader("우편번호 — Design Showcase")
@@ -81,13 +82,17 @@ private fun ColorSection() {
 }
 
 @Composable
-private fun ColorSwatch(name: String, color: Color) {
+private fun ColorSwatch(
+    name: String,
+    color: Color,
+) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
-            modifier = Modifier
-                .size(56.dp)
-                .clip(MaterialTheme.shapes.medium)
-                .background(color),
+            modifier =
+                Modifier
+                    .size(56.dp)
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(color),
         )
         Spacer(Modifier.height(ZipkrSpacing.xs))
         Text(text = name, style = MaterialTheme.typography.bodySmall)
@@ -120,10 +125,11 @@ private fun ShapeSection() {
                 MaterialTheme.shapes.extraLarge,
             ).forEach { shape ->
                 Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(shape)
-                        .background(MaterialTheme.colorScheme.primary),
+                    modifier =
+                        Modifier
+                            .size(48.dp)
+                            .clip(shape)
+                            .background(MaterialTheme.colorScheme.primary),
                 )
             }
         }

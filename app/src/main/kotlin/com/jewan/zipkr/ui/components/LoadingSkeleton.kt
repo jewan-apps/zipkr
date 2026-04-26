@@ -52,11 +52,12 @@ private fun SkeletonCard() {
 
     // 카드 배경(surfaceVariant)은 고정 유지하고, 안쪽 콘텐츠 바(outline)만 페이드한다.
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.medium)
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(ZipkrSpacing.md),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clip(MaterialTheme.shapes.medium)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .padding(ZipkrSpacing.md),
         verticalArrangement = Arrangement.spacedBy(ZipkrSpacing.sm),
     ) {
         SkeletonBar(widthFraction = 1.0f, heightDp = 16, alpha = alpha)
@@ -66,14 +67,19 @@ private fun SkeletonCard() {
 }
 
 @Composable
-private fun SkeletonBar(widthFraction: Float, heightDp: Int, alpha: Float) {
+private fun SkeletonBar(
+    widthFraction: Float,
+    heightDp: Int,
+    alpha: Float,
+) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth(widthFraction)
-            .height(heightDp.dp)
-            .clip(MaterialTheme.shapes.extraSmall)
-            .alpha(alpha)
-            .background(MaterialTheme.colorScheme.outline),
+        modifier =
+            Modifier
+                .fillMaxWidth(widthFraction)
+                .height(heightDp.dp)
+                .clip(MaterialTheme.shapes.extraSmall)
+                .alpha(alpha)
+                .background(MaterialTheme.colorScheme.outline),
     )
 }
 

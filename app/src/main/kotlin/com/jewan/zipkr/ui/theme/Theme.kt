@@ -23,25 +23,28 @@ fun ZipkrTheme(
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
-    val colors = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+    val colors =
+        when {
+            dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+                if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            }
+            darkTheme ->
+                darkColorScheme(
+                    primary = ZipkrColors.BrandAccentDark,
+                    background = ZipkrColors.SurfaceDark,
+                    surface = ZipkrColors.SurfaceDark,
+                    onSurface = ZipkrColors.OnSurfaceDark,
+                    error = ZipkrColors.ErrorDark,
+                )
+            else ->
+                lightColorScheme(
+                    primary = ZipkrColors.BrandAccent,
+                    background = ZipkrColors.SurfaceLight,
+                    surface = ZipkrColors.SurfaceLight,
+                    onSurface = ZipkrColors.OnSurfaceLight,
+                    error = ZipkrColors.ErrorLight,
+                )
         }
-        darkTheme -> darkColorScheme(
-            primary = ZipkrColors.BrandAccentDark,
-            background = ZipkrColors.SurfaceDark,
-            surface = ZipkrColors.SurfaceDark,
-            onSurface = ZipkrColors.OnSurfaceDark,
-            error = ZipkrColors.ErrorDark,
-        )
-        else -> lightColorScheme(
-            primary = ZipkrColors.BrandAccent,
-            background = ZipkrColors.SurfaceLight,
-            surface = ZipkrColors.SurfaceLight,
-            onSurface = ZipkrColors.OnSurfaceLight,
-            error = ZipkrColors.ErrorLight,
-        )
-    }
 
     MaterialTheme(
         colorScheme = colors,

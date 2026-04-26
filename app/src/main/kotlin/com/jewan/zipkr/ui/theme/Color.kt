@@ -8,8 +8,8 @@ import androidx.compose.ui.graphics.Color
  * - 브랜드 액센트는 단일 색(Indigo 600 계열) — 절제된 모던 톤.
  */
 internal object ZipkrColors {
-    val BrandAccent = Color(0xFF4F46E5)      // Indigo 600
-    val BrandAccentDark = Color(0xFF818CF8)  // Indigo 400 (다크 모드용)
+    val BrandAccent = Color(0xFF4F46E5) // Indigo 600
+    val BrandAccentDark = Color(0xFF818CF8) // Indigo 400 (다크 모드용)
 
     val SurfaceLight = Color(0xFFFFFFFF)
     val SurfaceDark = Color(0xFF111827)
