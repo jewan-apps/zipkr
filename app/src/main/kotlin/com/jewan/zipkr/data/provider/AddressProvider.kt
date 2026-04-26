@@ -15,6 +15,11 @@ interface AddressProvider {
  * 도메인 에러를 포함한 결과 타입이다.
  */
 sealed class Result<out T> {
-    data class Success<T>(val value: T) : Result<T>()
-    data class Failure(val error: AppError) : Result<Nothing>()
+    data class Success<T>(
+        val value: T,
+    ) : Result<T>()
+
+    data class Failure(
+        val error: AppError,
+    ) : Result<Nothing>()
 }

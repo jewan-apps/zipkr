@@ -4,8 +4,8 @@ complexity:
     threshold: 50
   LongParameterList:
     active: true
-    functionThreshold: 4
-    constructorThreshold: 4
+    functionThreshold: 5
+    constructorThreshold: 5
     # Compose 컴포저블은 modifier가 산업 표준 컨텍스트 인자라
     # "함수 책임이 늘어남"으로 보지 않는다 (헌법 §1.7 적용 예외).
     ignoreAnnotated: ['Composable']

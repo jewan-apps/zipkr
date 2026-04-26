@@ -33,10 +33,11 @@ data class JusoAddressDto(
     @SerialName("zipNo") val zipNo: String,
 ) {
     /** API DTO를 도메인 모델로 변환한다. */
-    fun toDomain(): Address = Address(
-        zipCode = zipNo,
-        roadAddress = roadAddr,
-        jibunAddress = jibunAddr,
-        englishAddress = engAddr,
-    )
+    fun toDomain(): Address =
+        Address(
+            zipCode = zipNo,
+            roadAddress = roadAddr,
+            jibunAddress = jibunAddr,
+            englishAddress = engAddr,
+        )
 }
