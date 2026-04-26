@@ -57,7 +57,8 @@ object NetworkModule {
     fun provideJusoApi(retrofit: Retrofit): JusoApi = retrofit.create(JusoApi::class.java)
 
     @Provides
-    @Named("juso_api_key")
+    @Singleton
+    @Named(DiQualifiers.JUSO_API_KEY)
     fun provideJusoApiKey(): String = BuildConfig.JUSO_API_KEY
 
     private const val JUSO_BASE_URL = "https://business.juso.go.kr/"

@@ -4,6 +4,7 @@ import com.jewan.zipkr.data.Address
 import com.jewan.zipkr.data.AppError
 import com.jewan.zipkr.data.Result
 import com.jewan.zipkr.data.provider.AddressProvider
+import com.jewan.zipkr.di.DiQualifiers
 import timber.log.Timber
 import java.io.IOException
 import javax.inject.Inject
@@ -17,7 +18,7 @@ class JusoApiProvider
     @Inject
     constructor(
         private val api: JusoApi,
-        @Named("juso_api_key") private val apiKey: String,
+        @Named(DiQualifiers.JUSO_API_KEY) private val apiKey: String,
     ) : AddressProvider {
         @Suppress("TooGenericExceptionCaught")
         override suspend fun search(query: String): Result<List<Address>> =
