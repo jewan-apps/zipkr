@@ -104,6 +104,35 @@ class SearchViewModelTest {
         }
 
     @Test
+    fun `4자리 숫자 입력은 우편번호 가드에 걸리지 않는다`() =
+        runTest {
+            coEvery { repository.search("1234") } returns Result.Success(emptyList())
+
+            viewModel.onQueryChange("1234")
+            viewModel.searchNow()
+
+            viewModel.uiState.test {
+                val phase = awaitItem().phase
+                // 5자리 숫자만 우편번호로 간주한다 — 4자리는 일반 검색 흐름.
+                assertThat(phase).isNotEqualTo(SearchUiState.Phase.PostalCodeUnsupported)
+            }
+        }
+
+    @Test
+    fun `숫자와 문자 혼합 입력은 우편번호 가드에 걸리지 않는다`() =
+        runTest {
+            coEvery { repository.search("1234a") } returns Result.Success(emptyList())
+
+            viewModel.onQueryChange("1234a")
+            viewModel.searchNow()
+
+            viewModel.uiState.test {
+                val phase = awaitItem().phase
+                assertThat(phase).isNotEqualTo(SearchUiState.Phase.PostalCodeUnsupported)
+            }
+        }
+
+    @Test
     fun `ApiBadResponse E0006 응답 시 Phase Error에 AppError가 보존된다`() =
         runTest {
             val apiError = AppError.ApiBadResponse("E0006")

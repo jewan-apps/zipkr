@@ -20,10 +20,10 @@
     <!-- "경기"/"서울" 같이 광역만 단독 입력 시 행안부가 결과 너무 많아 거부(E0006). 두 단어 이상 안내로 회피한다. -->
     <string name="error_query_too_broad">"경기" "서울" 같이 한 단어만 입력하면 결과가 너무 많아요.\n두 단어 이상 입력해주세요 (예: 경기 수원, 서울 강남구).</string>
     <string name="error_query_too_short">검색어를 한 글자 이상 입력해주세요</string>
-    <string name="error_numeric_only">숫자만으로는 검색할 수 없어요. 우편번호 역검색은 v1.1f에서 지원 예정</string>
+    <string name="error_numeric_only">숫자만으로는 검색할 수 없어요. 우편번호 역검색은 추후 지원 예정이에요.</string>
     <string name="error_invalid_query">검색어에 특수문자나 SQL 예약어는 사용할 수 없어요</string>
 
     <!-- 우편번호 역검색 미지원 안내이다. -->
     <string name="postal_code_unsupported_title">우편번호 역검색은 아직 지원 안 해요</string>
-    <string name="postal_code_unsupported_description">"11823" 같은 우편번호 → 주소 역검색은 v1.1f에서 지원 예정. 도로명·지번·건물명으로 검색해주세요.</string>
+    <string name="postal_code_unsupported_description">"11823" 같은 우편번호 → 주소 역검색은 추후 지원 예정이에요. 도로명·지번·건물명으로 검색해주세요.</string>
 </resources>

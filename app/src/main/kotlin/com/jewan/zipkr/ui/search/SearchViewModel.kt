@@ -98,6 +98,7 @@ class SearchViewModel
             const val MIN_QUERY_LEN = 2
 
             // 5자리 숫자 입력은 우편번호 역검색 시도로 판단해 별도 Phase로 전환한다.
-            val POSTAL_CODE_PATTERN = Regex("^\\d{5}$")
+            // String.matches(Regex)는 full-match라 앵커 불필요.
+            val POSTAL_CODE_PATTERN = Regex("""\d{5}""")
         }
     }

@@ -113,17 +113,18 @@ private fun errorMessageRes(error: AppError): Int =
 
 /**
  * ApiBadResponse errorCode를 세부 strings.xml 키로 매핑한다.
- * cyclomatic complexity 분산을 위해 별도 함수로 추출한다.
+ * cyclomatic complexity 분산을 위해 별도 함수로 추출하며,
+ * boolean predicate 순서 의존을 피해 code 자체를 switch한다 (방어적).
  */
 private fun apiBadResponseMessageRes(error: AppError.ApiBadResponse): Int =
-    when {
-        error.isAuthError -> R.string.error_auth
-        error.isQueryTooBroad -> R.string.error_query_too_broad
-        error.isQueryTooShort -> R.string.error_query_too_short
-        error.isNumericOnly -> R.string.error_numeric_only
-        error.isInvalidQuery -> R.string.error_invalid_query
-        error.isEmpty -> R.string.error_empty_query
-        error.isPathError -> R.string.error_path
+    when (error.code) {
+        in AppError.ApiBadResponse.AUTH_ERROR_CODES -> R.string.error_auth
+        AppError.ApiBadResponse.QUERY_TOO_BROAD_CODE -> R.string.error_query_too_broad
+        AppError.ApiBadResponse.QUERY_TOO_SHORT_CODE -> R.string.error_query_too_short
+        AppError.ApiBadResponse.NUMERIC_ONLY_CODE -> R.string.error_numeric_only
+        in AppError.ApiBadResponse.INVALID_QUERY_CODES -> R.string.error_invalid_query
+        AppError.ApiBadResponse.EMPTY_QUERY_CODE -> R.string.error_empty_query
+        AppError.ApiBadResponse.PATH_ERROR_CODE -> R.string.error_path
         else -> R.string.error_api // fallback: 명세 외 코드이다.
     }
 
