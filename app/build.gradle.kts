@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -24,12 +26,17 @@ android {
         vectorDrawables { useSupportLibrary = true }
 
         // 외부 키/ID는 모두 한 곳(defaultConfig)에서 default를 잡고, release만 Phase 7에서 override한다.
-        // - JUSO_API_KEY: Phase 2에서 local.properties → 채운다.
+        // - JUSO_API_KEY: local.properties → Properties 객체 → BuildConfig 주입 (헌법 §9 시크릿 관리).
         // - ADMOB_*: Google 공식 테스트 ID를 default. release는 Phase 7에서 local.properties로
         //   BuildConfig·manifestPlaceholders를 동시에 override (실 ID 주입).
         // 테스트 ID 출처: https://developers.google.com/admob/android/test-ads
         // (자기 실 ID로 본인 클릭 시 AdMob 계정 정지 → 디버그·검증은 무조건 테스트 ID.)
-        buildConfigField("String", "JUSO_API_KEY", "\"\"")
+        val localProps = Properties().apply {
+            val file = rootProject.file("local.properties")
+            if (file.exists()) load(file.inputStream())
+        }
+        val jusoKey = localProps.getProperty("juso.api.key", "")
+        buildConfigField("String", "JUSO_API_KEY", "\"$jusoKey\"")
         buildConfigField("String", "ADMOB_APP_ID", "\"ca-app-pub-3940256099942544~3347511713\"")
         buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"ca-app-pub-3940256099942544/6300978111\"")
         manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
