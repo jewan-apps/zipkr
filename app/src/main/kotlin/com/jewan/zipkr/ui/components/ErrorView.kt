@@ -18,11 +18,15 @@ import com.jewan.zipkr.ui.theme.ZipkrTheme
 /**
  * API 호출 실패·네트워크 오류 등 사용자에게 재시도를 권할 때 노출한다.
  * 사용자 친화 메시지만 표시하고, 내부 예외 원문은 노출하지 않는다 (헌법 §1.9).
+ *
+ * retryLabel은 호출부에서 stringResource로 주입하기 위해 파라미터화한다.
+ * Phase 5 i18n에서 컴포넌트 본체 변경 없이 KO/EN 레이블이 교체된다.
  */
 @Composable
 fun ErrorView(
     message: String,
     onRetry: () -> Unit,
+    retryLabel: String = "다시 시도",
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -36,7 +40,7 @@ fun ErrorView(
             color = MaterialTheme.colorScheme.error,
             textAlign = TextAlign.Center,
         )
-        Button(onClick = onRetry) { Text("다시 시도") }
+        Button(onClick = onRetry) { Text(retryLabel) }
     }
 }
 

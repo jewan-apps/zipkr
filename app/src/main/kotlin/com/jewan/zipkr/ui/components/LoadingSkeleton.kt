@@ -7,8 +7,8 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -50,19 +50,31 @@ private fun SkeletonCard() {
         label = "skeletonAlpha",
     )
 
+    // 카드 배경(surfaceVariant)은 고정 유지하고, 안쪽 콘텐츠 바(outline)만 페이드한다.
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.medium)
             .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(ZipkrSpacing.md)
-            .alpha(alpha),
+            .padding(ZipkrSpacing.md),
         verticalArrangement = Arrangement.spacedBy(ZipkrSpacing.sm),
     ) {
-        Spacer(Modifier.fillMaxWidth().height(16.dp).clip(MaterialTheme.shapes.extraSmall).background(MaterialTheme.colorScheme.outline))
-        Spacer(Modifier.fillMaxWidth(0.7f).height(12.dp).clip(MaterialTheme.shapes.extraSmall).background(MaterialTheme.colorScheme.outline))
-        Spacer(Modifier.fillMaxWidth(0.5f).height(12.dp).clip(MaterialTheme.shapes.extraSmall).background(MaterialTheme.colorScheme.outline))
+        SkeletonBar(widthFraction = 1.0f, heightDp = 16, alpha = alpha)
+        SkeletonBar(widthFraction = 0.7f, heightDp = 12, alpha = alpha)
+        SkeletonBar(widthFraction = 0.5f, heightDp = 12, alpha = alpha)
     }
+}
+
+@Composable
+private fun SkeletonBar(widthFraction: Float, heightDp: Int, alpha: Float) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth(widthFraction)
+            .height(heightDp.dp)
+            .clip(MaterialTheme.shapes.extraSmall)
+            .alpha(alpha)
+            .background(MaterialTheme.colorScheme.outline),
+    )
 }
 
 @Preview(showBackground = true)
