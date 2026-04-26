@@ -27,6 +27,13 @@ android {
         buildConfigField("String", "JUSO_API_KEY", "\"\"")
         buildConfigField("String", "ADMOB_APP_ID", "\"\"")
         buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"\"")
+
+        // AdMob SDK는 ContentProvider로 앱 시작 시점에 자동 init되므로 manifest의
+        // <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID">가
+        // 비어있으면 IllegalStateException으로 앱이 즉시 죽는다.
+        // Google 공식 테스트 App ID를 default로 박아 두 buildType 모두 안전하게 시작한다.
+        // 실제 release ID는 Phase 7에서 local.properties → 주입으로 release buildType만 override.
+        manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
     }
 
     buildTypes {
