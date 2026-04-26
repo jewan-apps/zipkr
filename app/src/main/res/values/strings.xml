@@ -9,21 +9,20 @@
     <string name="copy_zip_label">우편번호</string>
     <string name="copy_zip_action">우편번호 복사</string>
 
-    <!-- 에러 메시지: ViewModel은 AppError type만 보내고, Composable이 본 키로 매핑한다. -->
+    <!-- 에러 메시지: ViewModel은 AppError type만 보내고, Composable이 본 키로 매핑한다.
+         사용자에게는 "왜"보다 "무엇을 해야 하는지" 한 줄로만 전달한다 (간결성 우선). -->
     <string name="error_network">인터넷 연결을 확인해주세요</string>
-    <string name="error_api">검색 서비스가 일시적으로 불안정합니다</string>
+    <string name="error_api">잠시 후 다시 시도해주세요</string>
     <string name="error_unknown">잠시 후 다시 시도해주세요</string>
-    <!-- E0001(승인되지 않은 KEY)은 행안부가 단시간 다회 호출(rate limit) 시에도 같은 코드로 위장 응답을 보낸다. 사용자가 "개발자 문의"로 좌절하지 않게 부드럽게 안내한다. -->
-    <string name="error_auth">인증 오류 또는 일시적인 호출 제한이에요. 잠시 후 다시 시도해주세요</string>
-    <string name="error_path">정상적인 경로로 접속이 필요해요. 잠시 후 다시 시도해주세요</string>
+    <string name="error_auth">잠시 후 다시 시도해주세요</string>
+    <string name="error_path">잠시 후 다시 시도해주세요</string>
     <string name="error_empty_query">검색어를 입력해주세요</string>
-    <!-- "경기"/"서울" 같이 광역만 단독 입력 시 행안부가 결과 너무 많아 거부(E0006). 두 단어 이상 안내로 회피한다. -->
-    <string name="error_query_too_broad">"경기" "서울" 같이 한 단어만 입력하면 결과가 너무 많아요.\n두 단어 이상 입력해주세요 (예: 경기 수원, 서울 강남구).</string>
-    <string name="error_query_too_short">검색어를 한 글자 이상 입력해주세요</string>
-    <string name="error_numeric_only">숫자만으로는 검색할 수 없어요. 우편번호 역검색은 추후 지원 예정이에요.</string>
-    <string name="error_invalid_query">검색어에 특수문자나 SQL 예약어는 사용할 수 없어요</string>
+    <string name="error_query_too_broad">더 자세히 입력해주세요</string>
+    <string name="error_query_too_short">더 길게 입력해주세요</string>
+    <string name="error_numeric_only">숫자만으로는 검색할 수 없어요</string>
+    <string name="error_invalid_query">사용할 수 없는 문자가 포함됐어요</string>
 
     <!-- 우편번호 역검색 미지원 안내이다. -->
-    <string name="postal_code_unsupported_title">우편번호 역검색은 아직 지원 안 해요</string>
-    <string name="postal_code_unsupported_description">"11823" 같은 우편번호 → 주소 역검색은 추후 지원 예정이에요. 도로명·지번·건물명으로 검색해주세요.</string>
+    <string name="postal_code_unsupported_title">우편번호 검색은 지원하지 않아요</string>
+    <string name="postal_code_unsupported_description">도로명·지번·건물명으로 검색해주세요</string>
 </resources>
