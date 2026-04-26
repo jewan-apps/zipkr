@@ -12,14 +12,15 @@ import androidx.compose.ui.platform.LocalContext
 
 /**
  * 앱의 단일 진입 테마이다.
- * - Android 12+ Dynamic Color 자동 적용 (사용자 시스템 컬러 추종).
- * - 그 외 OS는 Color.kt의 자체 토큰 fallback.
+ * - 기본은 [ActivePalette] 기반 brand 컬러 우선 (Dynamic Color OFF).
+ *   양산 앱의 brand 정체성을 wallpaper 추출 색에 양보하지 않기 위함이다.
+ * - Dynamic Color를 원하면 호출부에서 dynamicColor = true 명시 (Material You 옵트인).
  * - 시스템 다크 모드 자동 추종.
  */
 @Composable
 fun ZipkrTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
@@ -31,17 +32,23 @@ fun ZipkrTheme(
             darkTheme ->
                 darkColorScheme(
                     primary = ZipkrColors.BrandAccentDark,
+                    onPrimary = ZipkrColors.OnBrand,
                     background = ZipkrColors.SurfaceDark,
                     surface = ZipkrColors.SurfaceDark,
                     onSurface = ZipkrColors.OnSurfaceDark,
+                    surfaceVariant = ZipkrColors.SubtleDark,
+                    onSurfaceVariant = ZipkrColors.OnSubtleDark,
                     error = ZipkrColors.ErrorDark,
                 )
             else ->
                 lightColorScheme(
                     primary = ZipkrColors.BrandAccent,
+                    onPrimary = ZipkrColors.OnBrand,
                     background = ZipkrColors.SurfaceLight,
                     surface = ZipkrColors.SurfaceLight,
                     onSurface = ZipkrColors.OnSurfaceLight,
+                    surfaceVariant = ZipkrColors.SubtleLight,
+                    onSurfaceVariant = ZipkrColors.OnSubtleLight,
                     error = ZipkrColors.ErrorLight,
                 )
         }
