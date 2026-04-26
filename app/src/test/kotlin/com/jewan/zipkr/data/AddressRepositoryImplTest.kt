@@ -1,0 +1,28 @@
+package com.jewan.zipkr.data
+
+import com.google.common.truth.Truth.assertThat
+import com.jewan.zipkr.data.provider.AddressProvider
+import com.jewan.zipkr.data.provider.Result
+import io.mockk.coEvery
+import io.mockk.mockk
+import kotlinx.coroutines.test.runTest
+import org.junit.Test
+
+class AddressRepositoryImplTest {
+    private val provider: AddressProvider = mockk()
+    private val repository = AddressRepositoryImpl(provider = provider)
+
+    @Test
+    fun `search는 provider 결과를 그대로 반환한다`() =
+        runTest {
+            val expected =
+                Result.Success(
+                    listOf(Address("06234", "도로명", "지번", "Eng")),
+                )
+            coEvery { provider.search("강남") } returns expected
+
+            val actual = repository.search("강남")
+
+            assertThat(actual).isEqualTo(expected)
+        }
+}
