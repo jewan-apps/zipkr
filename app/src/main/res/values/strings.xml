@@ -8,6 +8,10 @@
     <string name="copy_toast">%1$s 복사됨</string>
     <string name="copy_zip_label">우편번호</string>
     <string name="copy_zip_action">우편번호 복사</string>
+    <string name="copy_road_label">한글 주소</string>
+    <string name="copy_road_chip">한글 복사</string>
+    <string name="copy_english_label">영문 주소</string>
+    <string name="copy_english_chip">영문 복사</string>
     <string name="clear_query_action">검색어 지우기</string>
     <string name="load_more_retry">불러오기 실패. 다시 시도</string>
 

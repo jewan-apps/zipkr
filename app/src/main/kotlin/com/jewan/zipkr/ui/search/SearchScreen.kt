@@ -74,7 +74,6 @@ fun SearchScreen(
     val keyboard = LocalSoftwareKeyboardController.current
     val focus = remember { FocusRequester() }
     val copyToastTemplate = stringResource(R.string.copy_toast)
-    val zipLabel = stringResource(R.string.copy_zip_label)
 
     LaunchedEffect(Unit) {
         focus.requestFocus()
@@ -86,7 +85,6 @@ fun SearchScreen(
             context = context,
             view = view,
             copyToastTemplate = copyToastTemplate,
-            zipLabel = zipLabel,
             onCardClick = onCardClick,
             viewModel = viewModel,
         )
@@ -120,18 +118,17 @@ private fun rememberSearchCallbacks(
     context: android.content.Context,
     view: android.view.View,
     copyToastTemplate: String,
-    zipLabel: String,
     onCardClick: (zip: String) -> Unit,
     viewModel: SearchViewModel,
 ): SearchCallbacks =
-    remember(context, view, copyToastTemplate, zipLabel, onCardClick, viewModel) {
+    remember(context, view, copyToastTemplate, onCardClick, viewModel) {
         SearchCallbacks(
-            onCopyZip = { zipCode ->
-                context.copyToClipboard(zipLabel, zipCode)
+            onCopyAddress = { label, text ->
+                context.copyToClipboard(label, text)
                 view.lightHaptic()
                 // Android 13+ (API 33+)는 시스템이 자동 클립보드 토스트를 띄우므로 중복을 막는다.
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                    Toast.makeText(context, copyToastTemplate.format(zipCode), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, copyToastTemplate.format(text), Toast.LENGTH_SHORT).show()
                 }
             },
             onCardClick = onCardClick,
@@ -203,7 +200,7 @@ private fun SearchBar(
  * 헌법 §1.7 인자 4개 룰을 만족하기 위해 data class로 묶고, 각 phase 분기에서 필요한 것만 사용한다.
  */
 private data class SearchCallbacks(
-    val onCopyZip: (String) -> Unit,
+    val onCopyAddress: (label: String, text: String) -> Unit,
     val onCardClick: (String) -> Unit,
     val onRetry: () -> Unit,
     val onLoadMore: () -> Unit,
@@ -246,7 +243,7 @@ private fun SearchBody(
         is SearchUiState.Phase.Success ->
             SearchResultsList(
                 phase = phase,
-                onCopyZip = callbacks.onCopyZip,
+                onCopyAddress = callbacks.onCopyAddress,
                 onCardClick = callbacks.onCardClick,
                 onLoadMore = callbacks.onLoadMore,
             )
@@ -261,7 +258,7 @@ private fun SearchBody(
 @Composable
 private fun SearchResultsList(
     phase: SearchUiState.Phase.Success,
-    onCopyZip: (String) -> Unit,
+    onCopyAddress: (label: String, text: String) -> Unit,
     onCardClick: (String) -> Unit,
     onLoadMore: () -> Unit,
 ) {
@@ -275,7 +272,7 @@ private fun SearchResultsList(
             AddressResultCard(
                 address = address,
                 onCardClick = { onCardClick(address.zipCode) },
-                onCopyZip = { onCopyZip(address.zipCode) },
+                onCopyAddress = onCopyAddress,
             )
         }
         if (phase.isLoadingMore) {
