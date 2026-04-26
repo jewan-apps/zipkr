@@ -6,5 +6,9 @@ package com.jewan.zipkr.data
  * v2에서 카카오 Provider 추가 시 본 인터페이스는 변경 없다.
  */
 interface AddressRepository {
-    suspend fun search(query: String): Result<List<Address>>
+    suspend fun search(
+        query: String,
+        page: Int,
+        pageSize: Int,
+    ): Result<AddressPage>
 }

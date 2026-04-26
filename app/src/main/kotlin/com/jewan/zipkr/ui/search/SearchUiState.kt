@@ -17,6 +17,9 @@ data class SearchUiState(
 
         data class Success(
             val results: List<Address>,
+            val currentPage: Int,
+            val hasNext: Boolean,
+            val isLoadingMore: Boolean = false,
         ) : Phase
 
         data object Empty : Phase
