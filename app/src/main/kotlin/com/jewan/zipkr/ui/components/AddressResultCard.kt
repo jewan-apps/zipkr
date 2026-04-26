@@ -18,7 +18,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -46,9 +48,14 @@ private val ZIP_LABEL_SIZE = 10.sp
 private val ZIP_LABEL_TRACKING = 1.5.sp
 private val ZIP_LABEL_BOTTOM_PAD = 4.dp
 
-// CopyBar segment 시각 토큰 (4 segment: 우편 1.3 · 도로명 1 · 지번 1 · 영문 1)
-private const val ZIP_SEGMENT_WEIGHT = 1.3f
+// CopyBar segment 시각 토큰 — 듀얼 강조 (우편 1.4 · 도로명 1.4 · 지번 1 · 영문 1).
+// 우편번호와 도로명주소가 양대 use case라 둘 다 시각 위계 위에 둔다.
+private const val ZIP_SEGMENT_WEIGHT = 1.4f
+private const val ROAD_SEGMENT_WEIGHT = 1.4f
 private const val SECONDARY_SEGMENT_WEIGHT = 1f
+
+// 도로명 segment의 brand tint 배경 alpha. 우편(filled)보다는 약하게, plain보다는 강하게.
+private const val ROAD_TINT_ALPHA = 0.10f
 private val SEGMENT_LABEL_SIZE = 12.sp
 private val SEGMENT_VPAD = 14.dp
 private val SEGMENT_ICON_SIZE = 14.dp
@@ -157,34 +164,17 @@ private fun CopyBar(
                 .fillMaxWidth()
                 .height(IntrinsicSize.Min),
     ) {
-        // Primary segment — filled brand. 시각 위계의 주인공.
-        Button(
+        // 1단 — Primary filled. UC 1·4 (한국 결제 자동검색 / 택배 입력) trigger.
+        ZipSegment(
             onClick = onCopyZip,
-            modifier =
-                Modifier
-                    .weight(ZIP_SEGMENT_WEIGHT)
-                    .fillMaxHeight(),
-            shape = RectangleShape,
-            contentPadding = PaddingValues(vertical = SEGMENT_VPAD),
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.ContentCopy,
-                contentDescription = null,
-                modifier = Modifier.size(SEGMENT_ICON_SIZE),
-            )
-            Spacer(Modifier.width(SEGMENT_ICON_GAP))
-            Text(
-                text = stringResource(R.string.copy_zip_short),
-                fontSize = SEGMENT_LABEL_SIZE,
-                fontWeight = FontWeight.SemiBold,
-            )
-        }
-        SegmentDivider()
-        SecondarySegment(
-            label = stringResource(R.string.copy_road_short),
-            onClick = onCopyRoad,
-            modifier = Modifier.weight(SECONDARY_SEGMENT_WEIGHT),
+            modifier = Modifier.weight(ZIP_SEGMENT_WEIGHT),
         )
+        // 2단 — Brand tint. UC 2·3·4 (카톡 공유 / 공식 문서 / 택배). 우편·도로명 사이 divider 없음 — 톤 차별이 separator.
+        RoadSegment(
+            onClick = onCopyRoad,
+            modifier = Modifier.weight(ROAD_SEGMENT_WEIGHT),
+        )
+        // 3단 — Plain. 보조 use case.
         SegmentDivider()
         SecondarySegment(
             label = stringResource(R.string.copy_jibun_short),
@@ -196,6 +186,55 @@ private fun CopyBar(
             label = stringResource(R.string.copy_english_short),
             onClick = onCopyEnglish,
             modifier = Modifier.weight(SECONDARY_SEGMENT_WEIGHT),
+        )
+    }
+}
+
+@Composable
+private fun ZipSegment(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier.fillMaxHeight(),
+        shape = RectangleShape,
+        contentPadding = PaddingValues(vertical = SEGMENT_VPAD),
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.ContentCopy,
+            contentDescription = null,
+            modifier = Modifier.size(SEGMENT_ICON_SIZE),
+        )
+        Spacer(Modifier.width(SEGMENT_ICON_GAP))
+        Text(
+            text = stringResource(R.string.copy_zip_short),
+            fontSize = SEGMENT_LABEL_SIZE,
+            fontWeight = FontWeight.SemiBold,
+        )
+    }
+}
+
+@Composable
+private fun RoadSegment(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    FilledTonalButton(
+        onClick = onClick,
+        modifier = modifier.fillMaxHeight(),
+        shape = RectangleShape,
+        colors =
+            ButtonDefaults.filledTonalButtonColors(
+                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = ROAD_TINT_ALPHA),
+                contentColor = MaterialTheme.colorScheme.primary,
+            ),
+        contentPadding = PaddingValues(vertical = SEGMENT_VPAD),
+    ) {
+        Text(
+            text = stringResource(R.string.copy_road_short),
+            fontSize = SEGMENT_LABEL_SIZE,
+            fontWeight = FontWeight.SemiBold,
         )
     }
 }
