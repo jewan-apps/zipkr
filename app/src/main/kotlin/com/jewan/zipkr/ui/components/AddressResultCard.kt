@@ -164,17 +164,13 @@ private fun CopyBar(
                 .fillMaxWidth()
                 .height(IntrinsicSize.Min),
     ) {
-        // 1단 — Primary filled. UC 1·4 (한국 결제 자동검색 / 택배 입력) trigger.
-        ZipSegment(
-            onClick = onCopyZip,
-            modifier = Modifier.weight(ZIP_SEGMENT_WEIGHT),
+        // 좌→우 순서: 보조 → 핵심 (모바일 thumb reach·확인 다이얼로그 표준 — primary가 우측).
+        // 3단 plain — 보조 use case.
+        SecondarySegment(
+            label = stringResource(R.string.copy_english_short),
+            onClick = onCopyEnglish,
+            modifier = Modifier.weight(SECONDARY_SEGMENT_WEIGHT),
         )
-        // 2단 — Brand tint. UC 2·3·4 (카톡 공유 / 공식 문서 / 택배). 우편·도로명 사이 divider 없음 — 톤 차별이 separator.
-        RoadSegment(
-            onClick = onCopyRoad,
-            modifier = Modifier.weight(ROAD_SEGMENT_WEIGHT),
-        )
-        // 3단 — Plain. 보조 use case.
         SegmentDivider()
         SecondarySegment(
             label = stringResource(R.string.copy_jibun_short),
@@ -182,10 +178,15 @@ private fun CopyBar(
             modifier = Modifier.weight(SECONDARY_SEGMENT_WEIGHT),
         )
         SegmentDivider()
-        SecondarySegment(
-            label = stringResource(R.string.copy_english_short),
-            onClick = onCopyEnglish,
-            modifier = Modifier.weight(SECONDARY_SEGMENT_WEIGHT),
+        // 2단 brand tint — UC 2·3·4 (카톡 공유 / 공식 문서 / 택배).
+        RoadSegment(
+            onClick = onCopyRoad,
+            modifier = Modifier.weight(ROAD_SEGMENT_WEIGHT),
+        )
+        // 1단 primary filled — UC 1·4 trigger. 도로명·우편 사이 divider 없음 — 톤 차별이 separator.
+        ZipSegment(
+            onClick = onCopyZip,
+            modifier = Modifier.weight(ZIP_SEGMENT_WEIGHT),
         )
     }
 }
