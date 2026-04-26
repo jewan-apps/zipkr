@@ -20,7 +20,7 @@ import javax.inject.Inject
 
 /**
  * 검색 화면의 ViewModel이다.
- * 입력 변경에 debounce 400ms를 적용해 자동 검색을 트리거하며,
+ * 입력 변경에 debounce 700ms를 적용해 자동 검색을 트리거하며,
  * searchNow()로 즉시 트리거도 지원한다.
  */
 @OptIn(FlowPreview::class)
@@ -66,6 +66,11 @@ class SearchViewModel
                 _uiState.value = _uiState.value.copy(phase = SearchUiState.Phase.Idle)
                 return
             }
+            // 5자리 숫자 입력은 우편번호 역검색 시도로 판단해 API 호출 없이 안내 Phase로 전환한다.
+            if (query.matches(POSTAL_CODE_PATTERN)) {
+                _uiState.value = _uiState.value.copy(phase = SearchUiState.Phase.PostalCodeUnsupported)
+                return
+            }
             _uiState.value = _uiState.value.copy(phase = SearchUiState.Phase.Loading)
             inFlight =
                 viewModelScope.launch {
@@ -88,7 +93,11 @@ class SearchViewModel
             }
 
         private companion object {
-            const val DEBOUNCE_MS = 400L
+            // 자동 검색 debounce 시간이다 (한국어 조합 입력을 고려해 700ms로 설정한다).
+            const val DEBOUNCE_MS = 700L
             const val MIN_QUERY_LEN = 2
+
+            // 5자리 숫자 입력은 우편번호 역검색 시도로 판단해 별도 Phase로 전환한다.
+            val POSTAL_CODE_PATTERN = Regex("^\\d{5}$")
         }
     }

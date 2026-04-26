@@ -22,6 +22,12 @@ data class SearchUiState(
         data object Empty : Phase
 
         /**
+         * 5자리 숫자(우편번호) 입력 시 API 대신 안내 화면으로 전환하는 Phase이다.
+         * 행안부 API는 E0009로 거부하지만, 의도가 명확하므로 API 호출 없이 먼저 안내한다.
+         */
+        data object PostalCodeUnsupported : Phase
+
+        /**
          * AppError 자체를 보존한다. 사용자 가시 문자열은 Composable 레이어에서
          * stringResource로 매핑해 ViewModel이 i18n에 무관하게 유지된다.
          */
