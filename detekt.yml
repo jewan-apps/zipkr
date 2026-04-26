@@ -6,6 +6,9 @@ complexity:
     active: true
     functionThreshold: 4
     constructorThreshold: 4
+    # Compose 컴포저블은 modifier가 산업 표준 컨텍스트 인자라
+    # "함수 책임이 늘어남"으로 보지 않는다 (헌법 §1.7 적용 예외).
+    ignoreAnnotated: ['Composable']
   TooManyFunctions:
     active: true
     thresholdInClasses: 15
@@ -23,6 +26,10 @@ naming:
   FunctionNaming:
     active: true
     ignoreAnnotated: ['Composable']
+  # Compose theme의 표준 파일명(Color.kt/Type.kt/Theme.kt/Shape.kt/Spacing.kt)은
+  # 안에 든 단일 object 이름(ZipkrColors 등)과 다른 것이 관행이다.
+  MatchingDeclarationName:
+    active: false
 
 style:
   MagicNumber:
@@ -33,3 +40,13 @@ style:
   MaxLineLength:
     active: true
     maxLineLength: 120
+  UnusedPrivateMember:
+    active: true
+    # Compose Preview는 호출자 없이 IDE/스크린샷 도구가 직접 부른다.
+    # multi-preview 어노테이션도 동일하게 취급한다.
+    ignoreAnnotated:
+      - 'Preview'
+      - 'PreviewScreenSizes'
+      - 'PreviewLightDark'
+      - 'PreviewFontScale'
+      - 'PreviewParameter'

@@ -23,19 +23,23 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
 
-        // local.properties → BuildConfig 노출 (다음 Task에서 채움)
+        // 외부 키/ID는 모두 한 곳(defaultConfig)에서 default를 잡고, release만 Phase 7에서 override한다.
+        // - JUSO_API_KEY: Phase 2에서 local.properties → 채운다.
+        // - ADMOB_*: Google 공식 테스트 ID를 default. release는 Phase 7에서 local.properties로
+        //   BuildConfig·manifestPlaceholders를 동시에 override (실 ID 주입).
+        // 테스트 ID 출처: https://developers.google.com/admob/android/test-ads
+        // (자기 실 ID로 본인 클릭 시 AdMob 계정 정지 → 디버그·검증은 무조건 테스트 ID.)
         buildConfigField("String", "JUSO_API_KEY", "\"\"")
-        buildConfigField("String", "ADMOB_APP_ID", "\"\"")
-        buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"\"")
+        buildConfigField("String", "ADMOB_APP_ID", "\"ca-app-pub-3940256099942544~3347511713\"")
+        buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"ca-app-pub-3940256099942544/6300978111\"")
+        manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
     }
 
     buildTypes {
         debug {
             isMinifyEnabled = false
             applicationIdSuffix = ".debug"
-            // Google 공식 테스트 광고 ID (출시 절대 사용 금지)
-            buildConfigField("String", "ADMOB_APP_ID", "\"ca-app-pub-3940256099942544~3347511713\"")
-            buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"ca-app-pub-3940256099942544/6300978111\"")
+            // BuildConfig·manifestPlaceholders 모두 defaultConfig의 테스트 ID를 그대로 사용한다.
         }
         release {
             isMinifyEnabled = true
@@ -44,7 +48,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            // 실제 광고 ID는 Phase 7에서 local.properties → BuildConfig 주입으로 대체한다.
+            // 실 AdMob ID는 Phase 7에서 local.properties → BuildConfig + manifestPlaceholders 동시 override.
+            // Phase 7 전까지 release를 빌드하면 테스트 ID로 나가므로 출시 절대 금지.
         }
     }
 

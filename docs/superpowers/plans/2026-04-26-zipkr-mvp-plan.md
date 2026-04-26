@@ -767,7 +767,7 @@ class ZipkrApp : Application() {
 - [ ] **Step 3: 빌드 + 실행 확인**
 
 ```bash
-cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:assembleDevDebug
+cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:assembleDebug
 ```
 
 Expected: BUILD SUCCESSFUL. 에뮬레이터에서 실행 시 기본 화면 표시.
@@ -1045,7 +1045,7 @@ fun ZipkrTheme(
 - [ ] **Step 3: 빌드 통과 확인**
 
 ```bash
-cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:assembleDevDebug
+cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:assembleDebug
 ```
 
 Expected: BUILD SUCCESSFUL.
@@ -1284,6 +1284,206 @@ git -C /Users/jewan/Desktop/git/98_jewan/zipkr add app/src/main/kotlin/com/jewan
 git -C /Users/jewan/Desktop/git/98_jewan/zipkr commit -m "feat(ui): LoadingSkeleton 공통 컴포넌트 추가 (펄스 애니메이션)"
 ```
 
+### Task 1.8.5: DesignShowcaseScreen — 멀티 디바이스 프리뷰 검증 화면 ⭐
+
+**목적:** 컬러·타이포·라운딩·공통 컴포넌트(EmptyState/ErrorView/LoadingSkeleton)를 한 화면에 모아 노출한다. Compose 멀티 프리뷰 어노테이션으로 Phone·Foldable·Tablet × Light/Dark × 폰트 스케일 매트릭스를 IDE 한 번에 검증한다. 후속 앱들도 그대로 복붙해 디자인 시스템 회귀 검증 도구로 자산화한다.
+
+**Files:**
+- Create: `app/src/main/kotlin/com/jewan/zipkr/ui/showcase/DesignShowcaseScreen.kt`
+- Modify: `app/src/main/kotlin/com/jewan/zipkr/MainActivity.kt` — 임시 진입점으로 ShowcaseScreen 호출
+
+- [ ] **Step 1: DesignShowcaseScreen.kt 작성**
+
+```kotlin
+package com.jewan.zipkr.ui.showcase
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.PreviewFontScale
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewScreenSizes
+import androidx.compose.ui.unit.dp
+import com.jewan.zipkr.ui.components.EmptyState
+import com.jewan.zipkr.ui.components.ErrorView
+import com.jewan.zipkr.ui.components.LoadingSkeleton
+import com.jewan.zipkr.ui.theme.ZipkrTheme
+
+/**
+ * 디자인 시스템(컬러·타이포·라운딩·공통 컴포넌트)을 한 화면에 모아 노출한다.
+ * - 멀티 프리뷰 어노테이션으로 디바이스/테마/폰트 크기 매트릭스를 IDE에서 검증한다.
+ * - MVP 출시본은 SearchScreen으로 교체되며, 본 화면은 후속 앱들의 디자인 회귀 검증 도구로 자산화한다.
+ */
+@Composable
+fun DesignShowcaseScreen(modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
+        ) {
+            SectionHeader("우편번호 — Design Showcase")
+            ColorSection()
+            TypographySection()
+            ShapeSection()
+            ComponentSection()
+        }
+    }
+}
+
+@Composable
+private fun SectionHeader(text: String) {
+    Text(text = text, style = MaterialTheme.typography.headlineLarge)
+}
+
+@Composable
+private fun SubHeader(text: String) {
+    Text(text = text, style = MaterialTheme.typography.titleMedium)
+}
+
+@Composable
+private fun ColorSection() {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        SubHeader("Colors")
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ColorSwatch("Primary", MaterialTheme.colorScheme.primary)
+            ColorSwatch("Surface", MaterialTheme.colorScheme.surface)
+            ColorSwatch("Variant", MaterialTheme.colorScheme.surfaceVariant)
+            ColorSwatch("Error", MaterialTheme.colorScheme.error)
+        }
+    }
+}
+
+@Composable
+private fun ColorSwatch(name: String, color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
+            modifier = Modifier
+                .size(56.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(color),
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(text = name, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+@Composable
+private fun TypographySection() {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        SubHeader("Typography")
+        Text("displayLarge 가나다 ABC 06234", style = MaterialTheme.typography.displayLarge)
+        Text("headlineLarge 가나다 ABC 06234", style = MaterialTheme.typography.headlineLarge)
+        Text("titleLarge 가나다 ABC 06234", style = MaterialTheme.typography.titleLarge)
+        Text("bodyLarge 가나다 ABC 06234", style = MaterialTheme.typography.bodyLarge)
+        Text("bodySmall 가나다 ABC 06234", style = MaterialTheme.typography.bodySmall)
+        Text("labelLarge 가나다 ABC 06234", style = MaterialTheme.typography.labelLarge)
+    }
+}
+
+@Composable
+private fun ShapeSection() {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        SubHeader("Shapes (4 / 8 / 16 / 24 / 32 dp)")
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf(4, 8, 16, 24, 32).forEach { radius ->
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(radius.dp))
+                        .background(MaterialTheme.colorScheme.primary),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ComponentSection() {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        SubHeader("Components")
+        EmptyState(
+            title = "어떤 주소든 입력해보세요",
+            description = "도로명·지번·건물명 모두 검색됩니다.",
+        )
+        ErrorView(message = "잠시 후 다시 시도해주세요", onRetry = {})
+        LoadingSkeleton(cardCount = 2)
+    }
+}
+
+@PreviewScreenSizes
+@PreviewLightDark
+@PreviewFontScale
+@Composable
+private fun DesignShowcaseScreenPreview() {
+    ZipkrTheme(dynamicColor = false) {
+        DesignShowcaseScreen()
+    }
+}
+```
+
+- [ ] **Step 2: MainActivity.kt 임시 진입점 연결**
+
+`MainActivity.kt`의 `setContent { ZipkrTheme { ... } }` 본체를 다음으로 교체한다. (Phase 3에서 SearchScreen으로 다시 교체된다.)
+
+```kotlin
+setContent {
+    ZipkrTheme {
+        DesignShowcaseScreen()
+    }
+}
+```
+
+import 추가: `import com.jewan.zipkr.ui.showcase.DesignShowcaseScreen`.
+
+- [ ] **Step 3: 빌드 통과 확인**
+
+```bash
+cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:assembleDebug
+```
+
+Expected: BUILD SUCCESSFUL.
+
+- [ ] **Step 4: commit**
+
+```bash
+git -C /Users/jewan/Desktop/git/98_jewan/zipkr add app/src/main/kotlin/com/jewan/zipkr/ui/showcase/DesignShowcaseScreen.kt app/src/main/kotlin/com/jewan/zipkr/MainActivity.kt
+git -C /Users/jewan/Desktop/git/98_jewan/zipkr commit -m "feat(showcase): DesignShowcaseScreen + 멀티 디바이스/테마/폰트 프리뷰
+
+- @PreviewScreenSizes/@PreviewLightDark/@PreviewFontScale 어노테이션으로
+  Phone·Foldable·Tablet × Light/Dark × FontScale 매트릭스를 IDE 한 번에 검증한다.
+- MainActivity 임시 진입점 (Phase 3에서 SearchScreen으로 교체).
+- 후속 앱들의 디자인 시스템 회귀 검증 도구로 자산화한다.
+"
+```
+
+- [ ] **Step 5: 멀티 프리뷰 PNG 캡처 (PR 본문 첨부용)**
+
+Android Studio에서 `DesignShowcaseScreenPreview` 컴포저블의 Preview 패널을 연다. Phone·Foldable·Tablet × Light/Dark 최소 6장을 캡처해 PR 본문에 첨부한다. (실기기 검증은 형이 S25 Ultra에서 직접 확인.)
+
 ### Task 1.9: PR 생성 + develop 병합
 
 - [ ] **Step 1: 푸시 (형 컨펌 후) + PR**
@@ -1477,7 +1677,7 @@ class JusoModelsTest {
 - [ ] **Step 2: 테스트 실행 → 컴파일 실패 확인**
 
 ```bash
-cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:testDevDebugUnitTest --tests "com.jewan.zipkr.data.provider.juso.JusoModelsTest"
+cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:testDebugUnitTest --tests "com.jewan.zipkr.data.provider.juso.JusoModelsTest"
 ```
 
 Expected: COMPILE FAILURE (JusoModels 미존재).
@@ -1534,7 +1734,7 @@ data class JusoAddressDto(
 - [ ] **Step 4: 테스트 통과 확인**
 
 ```bash
-cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:testDevDebugUnitTest --tests "com.jewan.zipkr.data.provider.juso.JusoModelsTest"
+cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:testDebugUnitTest --tests "com.jewan.zipkr.data.provider.juso.JusoModelsTest"
 ```
 
 Expected: BUILD SUCCESSFUL, 2 tests passed.
@@ -1675,7 +1875,7 @@ class JusoApiProviderTest {
 - [ ] **Step 2: 테스트 실행 → 컴파일 실패 확인**
 
 ```bash
-cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:testDevDebugUnitTest --tests "com.jewan.zipkr.data.provider.juso.JusoApiProviderTest"
+cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:testDebugUnitTest --tests "com.jewan.zipkr.data.provider.juso.JusoApiProviderTest"
 ```
 
 Expected: COMPILE FAILURE.
@@ -1736,7 +1936,7 @@ class JusoApiProvider @Inject constructor(
 - [ ] **Step 4: 테스트 통과 확인**
 
 ```bash
-cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:testDevDebugUnitTest --tests "com.jewan.zipkr.data.provider.juso.JusoApiProviderTest"
+cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:testDebugUnitTest --tests "com.jewan.zipkr.data.provider.juso.JusoApiProviderTest"
 ```
 
 Expected: BUILD SUCCESSFUL, 4 tests passed.
@@ -1792,7 +1992,7 @@ class AddressRepositoryImplTest {
 - [ ] **Step 2: 컴파일 실패 확인**
 
 ```bash
-cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:testDevDebugUnitTest --tests "com.jewan.zipkr.data.AddressRepositoryImplTest"
+cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:testDebugUnitTest --tests "com.jewan.zipkr.data.AddressRepositoryImplTest"
 ```
 
 Expected: COMPILE FAILURE.
@@ -1821,7 +2021,7 @@ class AddressRepositoryImpl @Inject constructor(
 - [ ] **Step 4: 테스트 통과 확인**
 
 ```bash
-cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:testDevDebugUnitTest --tests "com.jewan.zipkr.data.AddressRepositoryImplTest"
+cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:testDebugUnitTest --tests "com.jewan.zipkr.data.AddressRepositoryImplTest"
 ```
 
 Expected: PASS.
@@ -1935,7 +2135,7 @@ abstract class DataModule {
 - [ ] **Step 3: 빌드 통과 + 단위 테스트 통과 확인**
 
 ```bash
-cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:assembleDevDebug :app:testDevDebugUnitTest
+cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:assembleDebug :app:testDebugUnitTest
 ```
 
 Expected: BUILD SUCCESSFUL, all tests passed.
@@ -1985,7 +2185,7 @@ buildConfigField("String", "JUSO_API_KEY", "\"$jusoKey\"")
 - [ ] **Step 4: 빌드 + 실기기 테스트**
 
 ```bash
-cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:assembleDevDebug
+cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:assembleDebug
 ```
 
 (이 시점엔 UI 호출 경로가 없으니 단위 테스트로만 확인. 다음 Phase에서 UI 통합.)
@@ -2205,7 +2405,7 @@ class SearchViewModelTest {
 - [ ] **Step 3: 테스트 → 컴파일 실패 확인**
 
 ```bash
-cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:testDevDebugUnitTest --tests "com.jewan.zipkr.ui.search.SearchViewModelTest"
+cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:testDebugUnitTest --tests "com.jewan.zipkr.ui.search.SearchViewModelTest"
 ```
 
 Expected: COMPILE FAILURE.
@@ -2313,7 +2513,7 @@ class SearchViewModel @Inject constructor(
 - [ ] **Step 5: 테스트 통과 확인**
 
 ```bash
-cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:testDevDebugUnitTest --tests "com.jewan.zipkr.ui.search.SearchViewModelTest"
+cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:testDebugUnitTest --tests "com.jewan.zipkr.ui.search.SearchViewModelTest"
 ```
 
 Expected: 4 tests passed.
@@ -2575,7 +2775,7 @@ fun SearchScreen(
 - [ ] **Step 3: 빌드 통과 + 에뮬레이터 실행 확인**
 
 ```bash
-cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:installDevDebug
+cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:installDebug
 ```
 
 (MainActivity·NavGraph는 다음 task에서 연결. 현재는 컴파일만 통과하면 OK.)
@@ -2923,7 +3123,7 @@ class MainActivity : ComponentActivity() {
 - [ ] **Step 4: 빌드 + 에뮬레이터 실행**
 
 ```bash
-cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:installDevDebug
+cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:installDebug
 ```
 
 수동 검증:
@@ -3210,7 +3410,7 @@ private class CrashlyticsTree : Timber.Tree() {
 - [ ] **Step 3: 빌드 통과 확인**
 
 ```bash
-cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:assembleProdRelease
+cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:assembleRelease
 ```
 
 (Release 빌드 시도하면 키스토어 누락으로 실패할 수 있음 — 다음 Task에서 처리.)
@@ -3281,7 +3481,7 @@ buildTypes {
 - [ ] **Step 4: 릴리즈 AAB 빌드 시도**
 
 ```bash
-cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:bundleProdRelease
+cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:bundleRelease
 ```
 
 Expected: `app/build/outputs/bundle/release/app-release.aab` 생성.
@@ -3334,7 +3534,7 @@ git -C /Users/jewan/Desktop/git/98_jewan/zipkr commit -m "chore: 릴리즈 서�
 - [ ] **Step 2: 릴리즈 빌드 + 실기기에서 동작 검증 (광고·검색 모두 정상)**
 
 ```bash
-cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:installProdRelease
+cd /Users/jewan/Desktop/git/98_jewan/zipkr && ./gradlew :app:installRelease
 ```
 
 수동 검증.
@@ -3466,7 +3666,7 @@ Kotlin · Jetpack Compose · Hilt · Retrofit · Material3 · AdMob · Firebase 
 ## Build
 1. `local.properties`에 `juso.api.key`, `admob.app.id`, `admob.banner.unit.id` 설정.
 2. `keystore.properties` 작성 (release 서명).
-3. `./gradlew :app:installDevDebug` (개발) 또는 `:app:bundleProdRelease` (출시 AAB).
+3. `./gradlew :app:installDebug` (개발) 또는 `:app:bundleRelease` (출시 AAB).
 
 ## License
 TBD

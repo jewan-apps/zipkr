@@ -14,6 +14,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Zipkr">
+
+        <!-- AdMob App ID는 build.gradle.kts의 manifestPlaceholders["admobAppId"]에서 주입한다.
+             debug = Google 공식 테스트 ID, release = Phase 7에서 local.properties로 실 ID 주입. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="${admobAppId}" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
