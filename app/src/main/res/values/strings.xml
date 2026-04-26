@@ -8,6 +8,7 @@
     <string name="copy_toast">%1$s 복사됨</string>
     <string name="copy_zip_label">우편번호</string>
     <string name="copy_zip_action">우편번호 복사</string>
+    <string name="clear_query_action">검색어 지우기</string>
 
     <!-- 에러 메시지: ViewModel은 AppError type만 보내고, Composable이 본 키로 매핑한다.
          사용자에게는 "왜"보다 "무엇을 해야 하는지" 한 줄로만 전달한다 (간결성 우선). -->
