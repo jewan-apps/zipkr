@@ -31,10 +31,11 @@ android {
         //   BuildConfig·manifestPlaceholders를 동시에 override (실 ID 주입).
         // 테스트 ID 출처: https://developers.google.com/admob/android/test-ads
         // (자기 실 ID로 본인 클릭 시 AdMob 계정 정지 → 디버그·검증은 무조건 테스트 ID.)
-        val localProps = Properties().apply {
-            val file = rootProject.file("local.properties")
-            if (file.exists()) load(file.inputStream())
-        }
+        val localProps =
+            Properties().apply {
+                val file = rootProject.file("local.properties")
+                if (file.exists()) load(file.inputStream())
+            }
         val jusoKey = localProps.getProperty("juso.api.key", "")
         buildConfigField("String", "JUSO_API_KEY", "\"$jusoKey\"")
         buildConfigField("String", "ADMOB_APP_ID", "\"ca-app-pub-3940256099942544~3347511713\"")
