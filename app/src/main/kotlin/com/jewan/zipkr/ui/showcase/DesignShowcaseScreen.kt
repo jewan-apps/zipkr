@@ -50,6 +50,7 @@ fun DesignShowcaseScreen(modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(ZipkrSpacing.lg),
         ) {
             SectionHeader("우편번호 — Design Showcase")
+            PaletteCandidatesSection()
             ColorSection()
             TypographySection()
             ShapeSection()
