@@ -8,9 +8,22 @@
     <string name="copy_toast">%1$s 복사됨</string>
     <string name="copy_zip_label">우편번호</string>
     <string name="copy_zip_action">우편번호 복사</string>
+    <string name="clear_query_action">검색어 지우기</string>
 
-    <!-- 에러 메시지: ViewModel은 AppError type만 보내고, Composable이 본 키로 매핑한다. -->
+    <!-- 에러 메시지: ViewModel은 AppError type만 보내고, Composable이 본 키로 매핑한다.
+         사용자에게는 "왜"보다 "무엇을 해야 하는지" 한 줄로만 전달한다 (간결성 우선). -->
     <string name="error_network">인터넷 연결을 확인해주세요</string>
-    <string name="error_api">검색 서비스가 일시적으로 불안정합니다</string>
+    <string name="error_api">잠시 후 다시 시도해주세요</string>
     <string name="error_unknown">잠시 후 다시 시도해주세요</string>
+    <string name="error_auth">잠시 후 다시 시도해주세요</string>
+    <string name="error_path">잠시 후 다시 시도해주세요</string>
+    <string name="error_empty_query">검색어를 입력해주세요</string>
+    <string name="error_query_too_broad">검색량이 너무 많아요. 더 자세히 입력해주세요</string>
+    <string name="error_query_too_short">더 길게 입력해주세요</string>
+    <string name="error_numeric_only">숫자만으로는 검색할 수 없어요</string>
+    <string name="error_invalid_query">사용할 수 없는 문자가 포함됐어요</string>
+
+    <!-- 우편번호 역검색 미지원 안내이다. -->
+    <string name="postal_code_unsupported_title">우편번호 검색은 지원하지 않아요</string>
+    <string name="postal_code_unsupported_description">도로명·지번·건물명으로 검색해주세요</string>
 </resources>

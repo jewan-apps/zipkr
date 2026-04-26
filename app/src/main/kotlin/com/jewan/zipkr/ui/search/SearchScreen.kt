@@ -7,11 +7,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -20,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -28,6 +35,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jewan.zipkr.R
@@ -35,7 +43,6 @@ import com.jewan.zipkr.data.AppError
 import com.jewan.zipkr.ui.components.AddressResultCard
 import com.jewan.zipkr.ui.components.EmptyState
 import com.jewan.zipkr.ui.components.ErrorView
-import com.jewan.zipkr.ui.components.LoadingSkeleton
 import com.jewan.zipkr.ui.theme.ZipkrSpacing
 import com.jewan.zipkr.util.copyToClipboard
 import com.jewan.zipkr.util.lightHaptic
@@ -107,8 +114,25 @@ fun SearchScreen(
 private fun errorMessageRes(error: AppError): Int =
     when (error) {
         is AppError.Network -> R.string.error_network
-        is AppError.ApiBadResponse -> R.string.error_api
         is AppError.Unknown -> R.string.error_unknown
+        is AppError.ApiBadResponse -> apiBadResponseMessageRes(error)
+    }
+
+/**
+ * ApiBadResponse errorCode를 세부 strings.xml 키로 매핑한다.
+ * cyclomatic complexity 분산을 위해 별도 함수로 추출하며,
+ * boolean predicate 순서 의존을 피해 code 자체를 switch한다 (방어적).
+ */
+private fun apiBadResponseMessageRes(error: AppError.ApiBadResponse): Int =
+    when (error.code) {
+        in AppError.ApiBadResponse.AUTH_ERROR_CODES -> R.string.error_auth
+        AppError.ApiBadResponse.QUERY_TOO_BROAD_CODE -> R.string.error_query_too_broad
+        AppError.ApiBadResponse.QUERY_TOO_SHORT_CODE -> R.string.error_query_too_short
+        AppError.ApiBadResponse.NUMERIC_ONLY_CODE -> R.string.error_numeric_only
+        in AppError.ApiBadResponse.INVALID_QUERY_CODES -> R.string.error_invalid_query
+        AppError.ApiBadResponse.EMPTY_QUERY_CODE -> R.string.error_empty_query
+        AppError.ApiBadResponse.PATH_ERROR_CODE -> R.string.error_path
+        else -> R.string.error_api // fallback: 명세 외 코드이다.
     }
 
 @Composable
@@ -127,6 +151,17 @@ private fun SearchBar(
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         // 키보드 검색 버튼은 debounce를 기다리지 않고 즉시 검색 + 키보드 닫기 (즉시성).
         keyboardActions = KeyboardActions(onSearch = { onSearch() }),
+        // 비어있을 때는 X 버튼을 숨겨 시각 노이즈를 줄인다.
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { onQueryChange("") }) {
+                    Icon(
+                        imageVector = Icons.Outlined.Close,
+                        contentDescription = stringResource(R.string.clear_query_action),
+                    )
+                }
+            }
+        },
     )
 }
 
@@ -143,11 +178,23 @@ private fun SearchBody(
                 title = stringResource(R.string.empty_title),
                 description = stringResource(R.string.empty_description),
             )
-        SearchUiState.Phase.Loading -> LoadingSkeleton()
+        SearchUiState.Phase.Loading ->
+            // 매 입력마다 큰 스켈레톤 카드가 깜빡이면 노이즈가 된다. 작은 스피너로 대체한다.
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(ZipkrSpacing.lg),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                CircularProgressIndicator(modifier = Modifier.size(32.dp))
+            }
         SearchUiState.Phase.Empty ->
             EmptyState(
                 title = stringResource(R.string.empty_results_title),
                 description = stringResource(R.string.empty_results_description),
+            )
+        SearchUiState.Phase.PostalCodeUnsupported ->
+            EmptyState(
+                title = stringResource(R.string.postal_code_unsupported_title),
+                description = stringResource(R.string.postal_code_unsupported_description),
             )
         is SearchUiState.Phase.Error ->
             ErrorView(
