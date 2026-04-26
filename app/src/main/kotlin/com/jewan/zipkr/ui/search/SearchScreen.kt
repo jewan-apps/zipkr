@@ -1,5 +1,6 @@
 package com.jewan.zipkr.ui.search
 
+import android.os.Build
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
@@ -71,26 +73,49 @@ fun SearchScreen(
                     .padding(padding)
                     .padding(16.dp),
         ) {
-            OutlinedTextField(
-                value = state.query,
-                onValueChange = viewModel::onQueryChange,
-                placeholder = { Text(stringResource(R.string.search_placeholder)) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth().focusRequester(focus),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            SearchBar(
+                query = state.query,
+                onQueryChange = viewModel::onQueryChange,
+                onSearch = {
+                    viewModel.searchNow()
+                    keyboard?.hide()
+                },
+                focus = focus,
             )
             SearchBody(
                 phase = state.phase,
                 onCopyZip = { zipCode ->
                     context.copyToClipboard(zipLabel, zipCode)
                     view.lightHaptic()
-                    Toast.makeText(context, copyToastTemplate.format(zipCode), Toast.LENGTH_SHORT).show()
+                    // Android 13+ (API 33+)는 시스템이 자동으로 클립보드 토스트를 띄우므로 중복 알림을 막는다.
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                        Toast.makeText(context, copyToastTemplate.format(zipCode), Toast.LENGTH_SHORT).show()
+                    }
                 },
                 onCardClick = onCardClick,
                 onRetry = { viewModel.searchNow() },
             )
         }
     }
+}
+
+@Composable
+private fun SearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onSearch: () -> Unit,
+    focus: FocusRequester,
+) {
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        placeholder = { Text(stringResource(R.string.search_placeholder)) },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth().focusRequester(focus),
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        // 키보드 검색 버튼은 debounce를 기다리지 않고 즉시 검색 + 키보드 닫기 (즉시성).
+        keyboardActions = KeyboardActions(onSearch = { onSearch() }),
+    )
 }
 
 @Composable
