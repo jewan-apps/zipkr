@@ -36,12 +36,18 @@ class SearchViewModel
         private val queryFlow = MutableStateFlow("")
         private var inFlight: Job? = null
 
+        // 마지막으로 트리거된 query를 추적해 debounce 흐름과 명시적 트리거(searchNow) 사이의
+        // 중복 호출을 차단한다. 사용자가 키보드 돋보기를 누르면 즉시 검색되고, 700ms 후 debounce가
+        // 같은 query를 다시 트리거하지 않도록 한다.
+        private var lastTriggeredQuery: String? = null
+
         init {
             viewModelScope.launch {
                 queryFlow
                     .debounce(DEBOUNCE_MS)
                     .distinctUntilChanged()
                     .filter { it.length >= MIN_QUERY_LEN }
+                    .filter { it != lastTriggeredQuery }
                     .onEach { runSearch(it) }
                     .collect { /* no-op */ }
             }
@@ -55,8 +61,13 @@ class SearchViewModel
             }
         }
 
-        /** 사용자가 명시적으로 즉시 검색을 누른 경우이다. */
+        /**
+         * 사용자가 명시적으로 즉시 검색을 누른 경우이다 (키보드 돋보기 / 재시도 버튼).
+         * lastTriggeredQuery를 reset해 같은 query라도 강제 호출하며, 이후 debounce 중복 차단을
+         * 함께 갱신한다.
+         */
         fun searchNow() {
+            lastTriggeredQuery = null
             runSearch(_uiState.value.query)
         }
 
@@ -68,9 +79,11 @@ class SearchViewModel
             }
             // 5자리 숫자 입력은 우편번호 역검색 시도로 판단해 API 호출 없이 안내 Phase로 전환한다.
             if (query.matches(POSTAL_CODE_PATTERN)) {
+                lastTriggeredQuery = query
                 _uiState.value = _uiState.value.copy(phase = SearchUiState.Phase.PostalCodeUnsupported)
                 return
             }
+            lastTriggeredQuery = query
             _uiState.value = _uiState.value.copy(phase = SearchUiState.Phase.Loading)
             inFlight =
                 viewModelScope.launch {

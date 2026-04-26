@@ -17,7 +17,7 @@
     <string name="error_auth">잠시 후 다시 시도해주세요</string>
     <string name="error_path">잠시 후 다시 시도해주세요</string>
     <string name="error_empty_query">검색어를 입력해주세요</string>
-    <string name="error_query_too_broad">더 자세히 입력해주세요</string>
+    <string name="error_query_too_broad">검색량이 너무 많아요. 더 자세히 입력해주세요</string>
     <string name="error_query_too_short">더 길게 입력해주세요</string>
     <string name="error_numeric_only">숫자만으로는 검색할 수 없어요</string>
     <string name="error_invalid_query">사용할 수 없는 문자가 포함됐어요</string>

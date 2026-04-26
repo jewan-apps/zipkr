@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -20,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -28,6 +31,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jewan.zipkr.R
@@ -35,7 +39,6 @@ import com.jewan.zipkr.data.AppError
 import com.jewan.zipkr.ui.components.AddressResultCard
 import com.jewan.zipkr.ui.components.EmptyState
 import com.jewan.zipkr.ui.components.ErrorView
-import com.jewan.zipkr.ui.components.LoadingSkeleton
 import com.jewan.zipkr.ui.theme.ZipkrSpacing
 import com.jewan.zipkr.util.copyToClipboard
 import com.jewan.zipkr.util.lightHaptic
@@ -160,7 +163,14 @@ private fun SearchBody(
                 title = stringResource(R.string.empty_title),
                 description = stringResource(R.string.empty_description),
             )
-        SearchUiState.Phase.Loading -> LoadingSkeleton()
+        SearchUiState.Phase.Loading ->
+            // 매 입력마다 큰 스켈레톤 카드가 깜빡이면 노이즈가 된다. 작은 스피너로 대체한다.
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(ZipkrSpacing.lg),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                CircularProgressIndicator(modifier = Modifier.size(32.dp))
+            }
         SearchUiState.Phase.Empty ->
             EmptyState(
                 title = stringResource(R.string.empty_results_title),
