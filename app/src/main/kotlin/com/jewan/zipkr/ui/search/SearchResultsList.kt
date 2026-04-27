@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.jewan.zipkr.R
+import com.jewan.zipkr.data.Address
 import com.jewan.zipkr.ui.components.AddressResultCard
 import com.jewan.zipkr.ui.theme.ZipkrSpacing
 
@@ -39,7 +40,7 @@ internal fun SearchResultsList(
     phase: SearchUiState.Phase.Success,
     query: String,
     onCopyAddress: (label: String, text: String) -> Unit,
-    onCardClick: (String) -> Unit,
+    onCardClick: (Address) -> Unit,
     onLoadMore: () -> Unit,
 ) {
     val listState = rememberLazyListState()
@@ -52,7 +53,7 @@ internal fun SearchResultsList(
             AddressResultCard(
                 address = address,
                 query = query,
-                onCardClick = { onCardClick(address.zipCode) },
+                onCardClick = { onCardClick(address) },
                 onCopyAddress = onCopyAddress,
             )
         }

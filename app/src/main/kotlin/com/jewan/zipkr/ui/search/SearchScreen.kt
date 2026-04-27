@@ -43,11 +43,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jewan.zipkr.R
+import com.jewan.zipkr.data.Address
 import com.jewan.zipkr.data.AppError
 import com.jewan.zipkr.ui.components.EmptyState
 import com.jewan.zipkr.ui.components.ErrorView
 import com.jewan.zipkr.ui.components.SidoAnchor
 import com.jewan.zipkr.ui.components.SidoSelectorSheet
+import com.jewan.zipkr.ui.detail.DetailSheet
 import com.jewan.zipkr.ui.theme.ZipkrSpacing
 import com.jewan.zipkr.util.copyToClipboard
 import com.jewan.zipkr.util.lightHaptic
@@ -60,13 +62,11 @@ private val SEARCH_BAR_RADIUS = 14.dp
  * - 진입 시 입력창 자동 포커스 + 키보드 자동 표시 (즉시성).
  * - 결과 카드 우측 복사 버튼은 우편번호만 클립보드 복사 + 토스트 + 햅틱.
  * - 리스트 끝 도달 시 무한 스크롤로 다음 page를 자동 fetch한다.
+ * - 카드 탭 시 DetailSheet 모달을 띄운다 (네비 없이 화면 내부 sheet 패턴).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchScreen(
-    onCardClick: (zip: String) -> Unit,
-    viewModel: SearchViewModel = hiltViewModel(),
-) {
+fun SearchScreen(viewModel: SearchViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val view = LocalView.current
@@ -79,15 +79,19 @@ fun SearchScreen(
         keyboard?.show()
     }
 
-    // 시트 열림 상태는 순수 UI 상태이므로 ViewModel에 두지 않고 화면 내 saveable로 관리.
+    // 시트 열림 상태는 순수 UI라 ViewModel이 아닌 화면 내 saveable로 관리한다 (Address는 @Parcelize).
     var sheetOpen by rememberSaveable { mutableStateOf(false) }
+    var detailSheetAddress by rememberSaveable { mutableStateOf<Address?>(null) }
 
     val callbacks =
         rememberSearchCallbacks(
             context = context,
             view = view,
             copyToastTemplate = copyToastTemplate,
-            onCardClick = onCardClick,
+            onCardClick = { addr ->
+                keyboard?.hide()
+                detailSheetAddress = addr
+            },
             viewModel = viewModel,
             onOpenSheet = {
                 keyboard?.hide()
@@ -108,6 +112,9 @@ fun SearchScreen(
             onSelect = viewModel::onSidoChange,
             onDismiss = { sheetOpen = false },
         )
+    }
+    detailSheetAddress?.let { addr ->
+        DetailSheet(address = addr, onDismiss = { detailSheetAddress = null })
     }
 }
 
@@ -145,7 +152,7 @@ private fun rememberSearchCallbacks(
     context: android.content.Context,
     view: android.view.View,
     copyToastTemplate: String,
-    onCardClick: (zip: String) -> Unit,
+    onCardClick: (Address) -> Unit,
     viewModel: SearchViewModel,
     onOpenSheet: () -> Unit,
     onSubmitExtra: () -> Unit,
@@ -241,7 +248,7 @@ private data class SearchCallbacks(
     val onQueryChange: (String) -> Unit,
     val onSubmit: () -> Unit,
     val onCopyAddress: (label: String, text: String) -> Unit,
-    val onCardClick: (String) -> Unit,
+    val onCardClick: (Address) -> Unit,
     val onRetry: () -> Unit,
     val onLoadMore: () -> Unit,
     val onOpenSheet: () -> Unit,
