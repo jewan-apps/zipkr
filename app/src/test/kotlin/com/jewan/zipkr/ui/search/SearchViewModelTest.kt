@@ -38,6 +38,25 @@ class SearchViewModelTest {
         Dispatchers.resetMain()
     }
 
+    // 테스트 fixture 헬퍼이다. Address 모델 확장(buildingName/sido/sigungu/eupmyeondong) 시
+    // 다수 call site의 노이즈를 줄이기 위해 도입했다. 신규 필드는 기본값 ""이다.
+    private fun testAddress(
+        zipCode: String,
+        roadAddress: String,
+        jibunAddress: String,
+        englishAddress: String,
+    ): Address =
+        Address(
+            zipCode = zipCode,
+            roadAddress = roadAddress,
+            jibunAddress = jibunAddress,
+            englishAddress = englishAddress,
+            buildingName = "",
+            sido = "",
+            sigungu = "",
+            eupmyeondong = "",
+        )
+
     // ------------------------------------------------------------------ 기존 케이스 (시그니처 update)
 
     @Test
@@ -53,7 +72,7 @@ class SearchViewModelTest {
     @Test
     fun `검색 결과가 있으면 Success가 된다`() =
         runTest {
-            val list = listOf(Address("06234", "도로명", "지번", "Eng"))
+            val list = listOf(testAddress("06234", "도로명", "지번", "Eng"))
             coEvery { repository.search("강남", any(), any()) } returns
                 Result.Success(
                     AddressPage(items = list, currentPage = 1, totalCount = 1),
@@ -166,10 +185,10 @@ class SearchViewModelTest {
         runTest {
             val firstPage =
                 listOf(
-                    Address("11111", "도로명1", "지번1", "Eng1"),
-                    Address("22222", "도로명2", "지번2", "Eng2"),
+                    testAddress("11111", "도로명1", "지번1", "Eng1"),
+                    testAddress("22222", "도로명2", "지번2", "Eng2"),
                 )
-            val secondPage = listOf(Address("33333", "도로명3", "지번3", "Eng3"))
+            val secondPage = listOf(testAddress("33333", "도로명3", "지번3", "Eng3"))
 
             // 첫 page: totalCount=3, pageSize=50 → 1*50 >= 3 이므로 hasNext=false 방지.
             // hasNext 테스트 목적으로 totalCount를 크게 설정한다 (1 * 50 < 100 → true).
@@ -200,7 +219,7 @@ class SearchViewModelTest {
     @Test
     fun `hasNext가 false면 loadMore가 호출돼도 fetch 안 한다`() =
         runTest {
-            val list = listOf(Address("11111", "도로명", "지번", "Eng"))
+            val list = listOf(testAddress("11111", "도로명", "지번", "Eng"))
             // totalCount = 1, page = 1, pageSize = 50 → 1*50 >= 1 → hasNext = false이다.
             coEvery { repository.search("강남", 1, 50) } returns
                 Result.Success(AddressPage(items = list, currentPage = 1, totalCount = 1))
@@ -220,7 +239,7 @@ class SearchViewModelTest {
     @Test
     fun `isLoadingMore 동안 loadMore 중복 호출은 차단된다`() =
         runTest {
-            val list = listOf(Address("11111", "도로명", "지번", "Eng"))
+            val list = listOf(testAddress("11111", "도로명", "지번", "Eng"))
             coEvery { repository.search("강남", 1, 50) } returns
                 Result.Success(AddressPage(items = list, currentPage = 1, totalCount = 200))
 
@@ -291,9 +310,9 @@ class SearchViewModelTest {
     fun `시도 선택 후 loadMore도 동일한 prefix를 유지한다`() =
         runTest {
             val page1 =
-                listOf(Address("06234", "서울 도로명1", "서울 지번1", "Eng1"))
+                listOf(testAddress("06234", "서울 도로명1", "서울 지번1", "Eng1"))
             val page2 =
-                listOf(Address("06235", "서울 도로명2", "서울 지번2", "Eng2"))
+                listOf(testAddress("06235", "서울 도로명2", "서울 지번2", "Eng2"))
 
             coEvery { repository.search("서울특별시 테헤란로", 1, 50) } returns
                 Result.Success(AddressPage(items = page1, currentPage = 1, totalCount = 100))

@@ -41,5 +41,9 @@ data class JusoAddressDto(
             roadAddress = roadAddr,
             jibunAddress = jibunAddr,
             englishAddress = engAddr,
+            buildingName = "",
+            sido = "",
+            sigungu = "",
+            eupmyeondong = "",
         )
 }
