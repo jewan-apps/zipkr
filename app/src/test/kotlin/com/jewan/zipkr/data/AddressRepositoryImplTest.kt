@@ -18,7 +18,7 @@ class AddressRepositoryImplTest {
             val expected =
                 Result.Success(
                     AddressPage(
-                        items = listOf(Address("06234", "도로명", "지번", "Eng")),
+                        items = listOf(Address("06234", "도로명", "지번", "Eng", "", "", "", "")),
                         currentPage = 1,
                         totalCount = 1,
                     ),

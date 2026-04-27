@@ -2,6 +2,8 @@ package com.jewan.zipkr.di
 
 import com.jewan.zipkr.data.AddressRepository
 import com.jewan.zipkr.data.AddressRepositoryImpl
+import com.jewan.zipkr.data.CoordinateRepository
+import com.jewan.zipkr.data.CoordinateRepositoryImpl
 import com.jewan.zipkr.data.provider.AddressProvider
 import com.jewan.zipkr.data.provider.juso.JusoApiProvider
 import dagger.Binds
@@ -20,4 +22,8 @@ abstract class DataModule {
     @Binds
     @Singleton
     abstract fun bindAddressRepository(impl: AddressRepositoryImpl): AddressRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCoordinateRepository(impl: CoordinateRepositoryImpl): CoordinateRepository
 }

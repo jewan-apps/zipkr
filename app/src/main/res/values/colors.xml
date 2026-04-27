@@ -7,4 +7,6 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <!-- Splash Screen API 배경 — 다크 네이비. ZipkrTheme의 SurfaceDark과 같은 톤이다. -->
+    <color name="splash_background">#0A0F1F</color>
 </resources>
