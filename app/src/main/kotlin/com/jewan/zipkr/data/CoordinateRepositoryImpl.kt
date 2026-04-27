@@ -1,5 +1,6 @@
 package com.jewan.zipkr.data
 
+import com.jewan.zipkr.data.provider.kakao.KakaoDocument
 import com.jewan.zipkr.data.provider.kakao.KakaoLocalApi
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
@@ -22,25 +23,33 @@ class CoordinateRepositoryImpl
         private val cache = ConcurrentHashMap<String, Coordinate>()
 
         override suspend fun fetchCoordinate(roadAddress: String): Result<Coordinate> {
-            cache[roadAddress]?.let { return Result.Success(it) }
-            return runCatching { api.geocode(roadAddress) }
-                .fold(
-                    onSuccess = { response ->
-                        val first =
-                            response.documents.firstOrNull()
-                                ?: return Result.Failure(AppError.ApiBadResponse(EMPTY_DOCUMENTS_CODE))
-                        val coord = first.toCoordinate()
-                        cache[roadAddress] = coord
-                        Result.Success(coord)
-                    },
-                    onFailure = { throwable ->
-                        when (throwable) {
-                            is IOException -> Result.Failure(AppError.Network(cause = throwable))
-                            else -> Result.Failure(AppError.Unknown(cause = throwable))
-                        }
-                    },
-                )
+            val cached = cache[roadAddress]
+            return if (cached != null) {
+                Result.Success(cached)
+            } else {
+                runCatching { api.geocode(roadAddress) }
+                    .fold(
+                        onSuccess = { response -> handleSuccess(roadAddress, response.documents.firstOrNull()) },
+                        onFailure = { throwable -> handleFailure(throwable) },
+                    )
+            }
         }
+
+        private fun handleSuccess(
+            roadAddress: String,
+            first: KakaoDocument?,
+        ): Result<Coordinate> {
+            if (first == null) return Result.Failure(AppError.ApiBadResponse(EMPTY_DOCUMENTS_CODE))
+            val coord = first.toCoordinate()
+            cache[roadAddress] = coord
+            return Result.Success(coord)
+        }
+
+        private fun handleFailure(throwable: Throwable): Result<Coordinate> =
+            when (throwable) {
+                is IOException -> Result.Failure(AppError.Network(cause = throwable))
+                else -> Result.Failure(AppError.Unknown(cause = throwable))
+            }
 
         private companion object {
             // 카카오가 200 OK를 주지만 documents 배열이 비어 매칭 실패한 경우의 도메인 코드이다.
