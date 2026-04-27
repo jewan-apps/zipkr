@@ -1,14 +1,20 @@
 # zipkr 상세 화면 설계 (Phase 4 v1)
 
-**작성일:** 2026-04-27
-**브랜치(예정):** `feat/detail-screen-v1`
+**작성일:** 2026-04-27 (v2 — 모달 시트 + 인터랙티브 지도로 갱신)
+**브랜치(예정):** `feat/detail-sheet-v1`
 **관련 task:** #14 Phase 4 — 상세 화면 + 네비 + 스플래시
+
+> **갱신 노트 (2026-04-27)**
+> 초기 안 (별도 화면 + 카카오 Static Map REST)에서 다음 두 가지 변경:
+> 1. **카카오 Static Map REST API는 실제로 미제공** (404 검증). 대안으로 **WebView + 카카오맵 web JavaScript SDK** 채택.
+> 2. **별도 화면 → ModalBottomSheet**. 시·도 필터와 동일 시트 패턴으로 디자인 일관, NavHost 작업 제거.
+> 결과: v1/v2 단계 구분 삭제 (처음부터 인터랙티브).
 
 ---
 
 ## 1. 목표
 
-검색 결과 카드 탭 시 진입하는 상세 화면을 만들고, NavHost·Splash Screen API를 같이 통합해 출시 준비 상태를 끌어올린다. 상세 화면의 가치는 "**리스트 카드가 못 주는 시각·행동 정보**"로 정의한다.
+검색 결과 카드 탭 시 ModalBottomSheet로 노출되는 **상세 시트**를 만들고, Splash Screen API를 같이 통합해 출시 준비 상태를 끌어올린다. 상세 시트의 가치는 "**리스트 카드가 못 주는 시각·행동 정보**"로 정의한다.
 
 ## 2. 맥락
 
@@ -40,19 +46,21 @@
 ## 5. 아키텍처 개요
 
 ```
-SearchScreen (cardClick)
+SearchScreen (cardClick → sheetOpen=true, address=clicked)
     │
-    ▼ Navigation Compose (Address Parcelable 통째 전달)
-DetailScreen (DetailViewModel + Hilt)
+    ▼ ModalBottomSheet (skipPartiallyExpanded = true)
+DetailSheet (DetailViewModel + Hilt)
     │
-    ├─ Address (이미 받은 데이터) → 즉시 표시
+    ├─ Address (이미 받은 데이터) → 즉시 표시 (점보 zip · 풀 주소 · 건물명 · 영문)
     │
     └─ lazy: KakaoLocalApi.geocode(roadAddress)
-            ├─ 좌표 (Coordinate) → KakaoStaticMapUrlBuilder → MapPreview (Coil)
+            ├─ 좌표 (Coordinate) → KakaoMapWebView (카카오맵 web JS SDK 임베드)
             └─ 좌표 → MapDeepLinkButtons (카카오맵·네이버지도)
 ```
 
-좌표는 검색 시점이 아닌 **상세 진입 시 lazy fetch**한다. 검색 결과 N개 모두 좌표 호출하면 부담이 크고, 사용자는 한 세션 1-2개 카드만 탭한다는 가정.
+NavHost·Route 사용하지 않는다. 시·도 필터 시트와 동일 패턴(`SearchScreen`이 sheet open state 보유, `ModalBottomSheet` 컴포저블 + `rememberModalBottomSheetState`).
+
+좌표는 검색 시점이 아닌 **시트 진입 시 lazy fetch**한다. 검색 결과 N개 모두 좌표 호출하면 부담이 크고, 사용자는 한 세션 1-2개 카드만 탭한다는 가정.
 
 ## 6. 데이터 모델 변경
 
@@ -101,22 +109,41 @@ fun toDomain(): Address = Address(
 
 `JusoAddressDto`에 `bdNm/siNm/sggNm/emdNm` 4 필드 추가 (`@SerialName` 매핑).
 
-## 7. 외부 의존성 — 카카오 로컬 API
+## 7. 외부 의존성 — 카카오 API
 
-### 7.1 endpoint
+두 가지 카카오 API 사용:
 
-- **좌표 변환**: `GET https://dapi.kakao.com/v2/local/search/address.json?query={roadAddress}`
-- **정적 지도**: `GET https://dapi.kakao.com/v2/maps/staticmap?...` (이미지, Coil이 직접 로드)
-- 인증: HTTP header `Authorization: KakaoAK {REST_API_KEY}`
+| 용도 | API | 인증 | 호출 방식 |
+|---|---|---|---|
+| 도로명 → 좌표 변환 | 카카오 로컬 REST API | REST 키 (HTTP header) | Retrofit suspend |
+| 인터랙티브 지도 임베드 | 카카오맵 web JavaScript SDK | JavaScript 키 (HTML 안) | WebView |
 
-### 7.2 키 관리
+### 7.1 카카오 로컬 REST — geocoding
 
-- `local.properties` → `kakao.rest.api.key=...`
-- `app/build.gradle.kts`에서 `Properties` 객체로 읽고 `buildConfigField("String", "KAKAO_REST_API_KEY", "...")`
+- **endpoint**: `GET https://dapi.kakao.com/v2/local/search/address.json?query={roadAddress}`
+- **인증**: `Authorization: KakaoAK {KAKAO_REST_API_KEY}`
+
+### 7.2 카카오맵 web JavaScript SDK
+
+- **로딩**: `<script src="//dapi.kakao.com/v2/maps/sdk.js?appkey={KAKAO_JS_KEY}&autoload=false"></script>`
+- **초기화**: `kakao.maps.load(() => { ... })` 후 `new kakao.maps.Map(...)` + `new kakao.maps.Marker(...)`
+- **호스팅**: 별도 호스팅 없이 Android `WebView`에 HTML 문자열 직접 주입 (`loadDataWithBaseURL`). baseUrl을 `https://localhost`로 두면 카카오 도메인 검사 통과.
+- **카카오 dev console**: "Web 플랫폼" 등록 + 사이트 도메인 추가 (`https://localhost`).
+  - **Android 플랫폼 등록은 불필요** — 우리는 Android SDK가 아니라 web SDK를 WebView에 띄우는 방식이므로 web 도메인 등록만 필요.
+
+### 7.3 키 관리
+
+| 키 | 용도 | local.properties | BuildConfig 필드 |
+|---|---|---|---|
+| REST | geocoding | `kakao.rest.api.key=...` | `KAKAO_REST_API_KEY` |
+| JavaScript | WebView 지도 | `kakao.js.api.key=...` | `KAKAO_JS_KEY` |
+
+- `app/build.gradle.kts`에서 `Properties` 객체로 두 키 모두 읽고 `buildConfigField("String", ...)`
 - `NetworkModule`에서 `BuildConfig.KAKAO_REST_API_KEY` provide (`@Named(DiQualifiers.KAKAO_REST_API_KEY)`)
 - 행안부 키와 동일 패턴 (헌법 §9 시크릿 관리)
+- JavaScript 키는 WebView HTML 생성 시점에 직접 사용
 
-### 7.3 응답 모델 (`KakaoModels.kt`)
+### 7.4 응답 모델 (`KakaoModels.kt`)
 
 ```kotlin
 @Serializable data class KakaoGeocodeResponse(val documents: List<KakaoDocument> = emptyList())
@@ -127,7 +154,7 @@ fun toDomain(): Address = Address(
 
 `x/y`가 String으로 오므로 toDouble 변환은 도메인 매핑 단에서.
 
-### 7.4 Repository — `CoordinateRepository`
+### 7.5 Repository — `CoordinateRepository`
 
 ```kotlin
 interface CoordinateRepository {
@@ -136,111 +163,123 @@ interface CoordinateRepository {
 ```
 
 - 단일 책임 (좌표만)
-- in-memory 캐시: `MutableMap<String, Coordinate>` (key = roadAddress). 같은 카드 다시 진입 시 재호출 안 함.
+- in-memory 캐시: `ConcurrentHashMap<String, Coordinate>` (key = roadAddress). 같은 카드 다시 진입 시 재호출 안 함.
 - 캐시 영속화는 안 함 (앱 재시작 시 무효, MVP 단순함 우선)
 - 네트워크 실패는 `Result.Failure(AppError)`로 wrap (기존 `AppError` enum 재사용)
 
-### 7.5 정적 지도 URL (`KakaoStaticMapUrlBuilder`)
+### 7.6 카카오맵 WebView HTML 빌더 (`KakaoMapHtmlBuilder`)
 
 ```kotlin
-fun buildUrl(coord: Coordinate, width: Int, height: Int, level: Int = 3, marker: Boolean = true): String
+fun buildHtml(coord: Coordinate, jsKey: String, level: Int = 3): String
 ```
 
-- `level` 줌 단계 (3 = 동네 단위, 카카오 기준 기본값)
-- `marker = true`이면 좌표에 핀 표시 (`markers=size:mid|...`)
-- 인증: HTTP header `Authorization: KakaoAK {REST_KEY}` 필요 → Coil의 `ImageLoader`에 OkHttp 인터셉터로 카카오 도메인 요청에만 header 주입
-- 카카오 dev console: "Android 플랫폼" 등록 + 패키지명 (`com.jewan.zipkr`, `com.jewan.zipkr.debug`) 등록 필수. REST 키는 그대로 사용 가능 (별도 key hash 인증은 SDK 사용 시에만 요구되며, REST API에는 불필요).
+- `<!DOCTYPE html>` 시작 + `<script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=...&autoload=false">` 로딩
+- `<div id="map" style="width:100vw; height:100vh">` + `kakao.maps.load(() => { ... })` 초기화
+- 좌표에 마커 1개 + bind `Map` 인스턴스
+- 줌 컨트롤: 카카오맵 SDK 기본 ZoomControl 표시 (`map.addControl(...)`)
+- HTML 문자열을 `WebView.loadDataWithBaseURL("https://localhost", html, "text/html", "UTF-8", null)` 로 주입
 
 ## 8. UI 구성
 
-### 8.1 화면 레이아웃
+### 8.1 시트 레이아웃
 
 ```
+검색 결과 화면 (scrim + blur 처리)
+          │
+          ▼ ModalBottomSheet 슬라이드업
 ┌────────────────────────────────────┐
-│ ← 상세                              │  TopAppBar (back)
+│           ─── grabber              │  Material3 default
 ├────────────────────────────────────┤
-│  17933                              │  점보 우편번호 (28sp, 브랜드, monospace)
-│                                     │
-│  경기도 평택시 안중읍 안현로 400      │  도로명 (titleLarge, SemiBold)
-│  안중읍 안중리 445-16                │  지번 (bodyMedium, onSurfaceVariant)
-│  안중읍행정복지센터                   │  건물명 (bodyMedium, primary, 빈 값이면 숨김)
+│  17933                              │  점보 우편번호 (32sp, 브랜드, monospace)
+│  경기도 평택시 안중읍 안현로 400      │  도로명 (titleMedium, SemiBold)
+│  안중읍 안중리 445-16                │  지번 (bodySmall, onSurfaceVariant)
+│  안중읍행정복지센터                   │  건물명 (bodySmall, primary, 빈 값이면 숨김)
 │  400 Anhyeon-ro, Anjung-eup, ...    │  영문 (bodySmall, italic)
 ├────────────────────────────────────┤
 │ ┌────────────────────────────────┐ │
 │ │                                │ │
-│ │       [ 정적 지도 이미지 ]       │ │  MapPreview (200dp, 16dp radius)
-│ │           📍                    │ │
+│ │  [ 인터랙티브 카카오맵 (WebView)]│ │  KakaoMapWebView (220dp, 16dp radius)
+│ │       드래그·줌 가능 📍          │ │
 │ └────────────────────────────────┘ │
 │                                     │  좌표 fetch 중: 회색 placeholder + spinner
 │                                     │  실패: 회색 placeholder + "지도를 불러올 수 없어요"
 ├────────────────────────────────────┤
-│ [ 카카오맵에서 보기 ]                │  MapDeepLinkButtons
-│ [ 네이버지도에서 보기 ]              │  (좌표 fetch 실패 시 비활성)
+│ [ 카카오맵 ]   [ 네이버지도 ]        │  MapDeepLinkButtons (작은 wrap_content)
 ├────────────────────────────────────┤
 │  영문주소 │ 지번주소 │ 도로명 │ 우편 │  CopyBar 재사용 (v1.1b 컴포넌트)
 └────────────────────────────────────┘
 ```
 
+시트는 `skipPartiallyExpanded = true`로 열림 즉시 풀 높이까지 확장 (시·도 필터 시트 동일 동작). swipe down 또는 scrim 탭으로 닫힘.
+
 ### 8.2 컴포넌트 분리
 
-- `DetailScreen.kt` — 화면 컴포저블 (top bar + Column 조립)
-- `DetailHeader.kt` — 점보 우편번호 + 풀 주소 영역
-- `MapPreview.kt` — Coil 이미지 + placeholder + error state 한 컴포저블
-- `MapDeepLinkButtons.kt` — 외부 앱 deep link 2 버튼
-- `util/MapDeepLinks.kt` — URL 빌더 + Intent 처리 (카카오맵·네이버지도 + web fallback)
+- **신규** `ui/detail/DetailSheet.kt` — `ModalBottomSheet` + Column 조립
+- **신규** `ui/detail/DetailHeader.kt` — 점보 우편번호 + 풀 주소 영역
+- **신규** `ui/components/KakaoMapWebView.kt` — `AndroidView { WebView(...) }` wrap, `loadDataWithBaseURL`로 카카오맵 web HTML 주입
+- **신규** `ui/components/MapDeepLinkButtons.kt` — 외부 앱 deep link 2 버튼
+- **신규** `util/MapDeepLinks.kt` — URL 빌더 + Intent 처리 (카카오맵·네이버지도 + web fallback)
 
-`AddressResultCard`의 CopyBar 부분은 별도 함수(`CopyBar`)로 추출되어 있으므로 그대로 재사용 가능.
+`AddressResultCard`의 `CopyBar`는 별도 함수로 추출되어 있으므로 그대로 재사용 가능.
 
 ### 8.3 색·폰트
 
 - 기존 `ZipkrTheme` 토큰 재사용
-- 점보 우편번호: 카드와 동일 (28sp, monospace, primary)
+- 점보 우편번호: 카드보다 더 큼 (32sp, monospace, primary) — 시트에서 정보 hierarchy 강조
 - 지도 영역 코너: 16dp radius
 - 외부 앱 버튼: `FilledTonalButton` (브랜드 tint, 카드의 RoadSegment 톤과 일관)
+- 시트 컨테이너: 시·도 시트와 동일 (`MaterialTheme.colorScheme.surface`, `RoundedCornerShape(topStart=24.dp, topEnd=24.dp)`)
 
-## 9. 라우팅 (Navigation Compose)
+## 9. 시트 진입 — Navigation 없음
 
 ### 9.1 새 의존성
 
-`gradle/libs.versions.toml`에 `androidx-navigation-compose` 추가.
+**Navigation Compose 추가하지 않는다.** 시·도 필터 시트와 동일 패턴.
 
-### 9.2 Route 정의
+### 9.2 SearchScreen 상태 패턴
 
 ```kotlin
-sealed interface ZipkrRoute {
-    @Serializable data object Search : ZipkrRoute
-    @Serializable data class Detail(val address: Address) : ZipkrRoute
+var detailSheetAddress by rememberSaveable { mutableStateOf<Address?>(null) }
+
+SearchScreen(...) {
+    // ...
+    AddressResultCard(
+        address = address,
+        onCardClick = { detailSheetAddress = address },
+        // ...
+    )
+}
+
+if (detailSheetAddress != null) {
+    DetailSheet(
+        address = detailSheetAddress!!,
+        onDismiss = { detailSheetAddress = null },
+    )
 }
 ```
 
-Navigation Compose 2.8+ type-safe routing 사용. `Address`가 `@Parcelize`+`@Serializable`이면 `navArgument` 자동 처리.
+- `Address`는 `@Parcelize`로 `rememberSaveable`에 저장 가능 (process death 후 복원)
+- `SearchScreen`이 sheet open state 보유 (시·도 시트도 같은 패턴 — `sheetOpen: Boolean`)
+- `DetailSheet`는 stateless — `address` props로 받고 `onDismiss` 콜백
 
-`@Serializable`이 어려운 경우 fallback: `navType = NavType.ParcelableType(Address::class.java)`로 수동 처리.
-
-### 9.3 NavHost 위치
-
-- **`ui/Navigation.kt` 단일 파일** (Search·Detail 2 화면뿐). 5 화면 넘으면 그때 디렉토리 분리.
-- `MainActivity`의 `setContent`에서 `NavHost(navController, startDestination = ZipkrRoute.Search)` 호출.
-
-### 9.4 SearchScreen 변경
-
-- `onCardClick: (zipCode) -> Unit` → `onCardClick: (Address) -> Unit`로 시그니처 변경
-- 호출부에서 `navController.navigate(ZipkrRoute.Detail(address))`
-
-### 9.5 DetailViewModel — savedStateHandle
+### 9.3 DetailViewModel
 
 ```kotlin
 @HiltViewModel
 class DetailViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
     private val coordinateRepository: CoordinateRepository,
 ) : ViewModel() {
-    private val address: Address = savedStateHandle.toRoute<ZipkrRoute.Detail>().address
-    // ...
+    private val _coordinate = MutableStateFlow<CoordinatePhase>(CoordinatePhase.Loading)
+    val coordinate: StateFlow<CoordinatePhase> = _coordinate.asStateFlow()
+
+    fun fetchCoordinate(roadAddress: String) { ... }
 }
 ```
 
-`SavedStateHandle.toRoute<T>()`로 type-safe하게 Address 복원.
+- `Address`는 ViewModel 외부에서 props로 전달 (시트가 stateless)
+- `coordinate`만 ViewModel state로 관리 (lazy fetch)
+- `CoordinatePhase`: sealed (`Loading | Success(Coordinate) | Failure(AppError)`)
+- `DetailSheet`가 처음 composition 시 `LaunchedEffect`에서 `viewModel.fetchCoordinate(address.roadAddress)` 호출
 
 ## 10. 에러 처리
 
@@ -290,34 +329,41 @@ override fun onCreate(savedInstanceState: Bundle?) {
 |---|---|---|
 | `KakaoLocalApiProvider` | API mock 응답 → Coordinate 변환 | 정상 / 빈 documents / x/y NaN |
 | `CoordinateRepositoryImpl` | 캐시 동작 | 첫 호출 fetch, 재호출 캐시 hit |
-| `KakaoStaticMapUrlBuilder` | URL 조립 | 좌표 + 마커 + 줌 파라미터 |
+| `KakaoMapHtmlBuilder` | HTML 문자열 조립 | 좌표·줌·키 주입 검증 (간단 substring assert) |
 | `MapDeepLinks` | URL/Intent 빌더 | 카카오맵·네이버지도·web fallback |
-| `DetailViewModel` | savedStateHandle Address 복원 + lazy fetch | 정상 / 실패 / 캐시 hit |
-| 통합 테스트 | 진입 → 지도 표시 → deep link 클릭 | 수동 (실기) |
+| `DetailViewModel` | lazy fetch 로직 | 정상 / 실패 / 캐시 hit |
+| 통합 테스트 | 시트 진입 → 지도 표시 → deep link 클릭 | 수동 (실기) |
 
 기존 `SearchViewModelTest`는 `onCardClick` 시그니처 변경 (`zipCode` → `Address`)에 맞춰 갱신.
 
-## 14. 단계 구분 (v1 / v2)
+**Compose UI 테스트는 안 함** — 시트 동작은 시·도 시트와 동일 패턴이고 Material3 컴포넌트라 별도 검증 비용 대비 가치 낮음.
 
-| 단계 | 범위 | 시점 |
-|---|---|---|
-| **v1 (이번 PR)** | 정적 지도 + deep link + Address 확장 + Splash + NavHost | 지금 |
-| **v2 (출시 후 검토)** | 카카오맵 SDK 인터랙티브 임베드 | 사용자 피드백 데이터 기반 결정 |
+## 14. 단계 구분 — 없음
+
+초기 안에는 v1(정적 지도) → v2(인터랙티브 SDK) 단계 분리가 있었으나, **WebView + 카카오맵 web JS 방식이 부담 적고 사용자 가치 ↑** 라 처음부터 인터랙티브로 통일. v1·v2 구분 삭제.
+
+추후 검토 가능한 v2 후보 (이번 PR 범위 밖):
+- 카카오맵 native Android SDK로 교체 (성능 ↑, 첫 로드 latency 제거)
+- 즐겨찾기·메모·히스토리 등 personalization
+- 거리뷰 임베드
 
 ## 15. 릴리즈 영향
 
-- 새 의존성: `androidx.navigation:navigation-compose`, `androidx.core:core-splashscreen`, `coil-compose` (이미 있을 수 있음 — 확인)
+- 새 의존성: `androidx.core:core-splashscreen`, `androidx.webkit:webkit` (WebView 호환성)
+  - **Navigation Compose·Coil 추가 안 함** (모달 + WebView 방식이라 불필요)
 - 새 권한: **없음** (인터넷만, 이미 선언)
-- 새 키: 카카오 REST API 키 1개 (운영 키 출시 시 별도 발급 권장 — 형 작업)
-- 앱 크기 증가: ~수백 KB (Navigation Compose + Coil)
+- 새 키: 카카오 **REST 키** + **JavaScript 키** 각 1개 (같은 dev console 동일 앱 등록)
+  - REST 키: 이미 dev 단계 발급 (`0c9ea6...`). 출시 직전 운영 키로 교체 권장 — 형 작업.
+  - JavaScript 키: 같은 콘솔에서 추가 발급 (Web 플랫폼 등록 + `https://localhost` 도메인 추가)
+- 앱 크기 증가: ~50KB (core-splashscreen + webkit). WebView 자체는 시스템 기본 컴포넌트라 무료.
 
 ## 16. 미해결 항목 (구현 단계 결정)
 
-- 카카오 정적 지도 줌 level 기본값 (3 vs 4) — 실기 보고 조정
-- DetailHeader 우편번호 점보 폰트 size — 카드 28sp 기준에서 더 키울지 (32sp?)
-- 외부 앱 버튼 라벨 — "카카오맵에서 보기" vs "카카오맵 열기" 미세 wording
+- WebView 카카오맵 초기 줌 level (3 = 동네, 4 = 작은 동네) — 실기 보고 조정
+- DetailHeader 우편번호 점보 폰트 size — 시트에서 32sp가 적절한지 실기 검증
+- 외부 앱 버튼 라벨 — "카카오맵" vs "카카오맵에서 보기" 미세 wording
 - 좌표 fetch 실패 시 재시도 버튼 vs 자동 재시도 — UX 결정
-- DetailScreen 진입 transition (slide vs fade vs default)
+- WebView 첫 로드 latency가 사용자 체감에 거슬리는지 — 실기 검증 필요. 거슬리면 placeholder 이미지(주소 텍스트만 보이는 카드 같은) 짧게 표시 검토.
 
 위 항목은 implementation plan 단계 또는 구현 중 결정.
 
