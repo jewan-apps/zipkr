@@ -7,12 +7,14 @@ import com.jewan.zipkr.data.AddressPage
 import com.jewan.zipkr.data.AddressRepository
 import com.jewan.zipkr.data.AppError
 import com.jewan.zipkr.data.Result
+import com.jewan.zipkr.data.Sido
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -243,4 +245,116 @@ class SearchViewModelTest {
             // loadMore 완료 후에는 isLoadingMore = false이어야 한다.
             assertThat((afterFirst as SearchUiState.Phase.Success).isLoadingMore).isFalse()
         }
+
+    // ------------------------------------------------------------------ 시·도 칩 케이스
+
+    @Test
+    fun `시도 선택 시 query 앞에 apiPrefix가 붙어 호출된다`() =
+        runTest {
+            // 사용자 입력은 "테헤란로"이지만 서울 칩 선택 시 effective query는 "서울특별시 테헤란로"여야 한다.
+            coEvery { repository.search("서울특별시 테헤란로", 1, 50) } returns
+                Result.Success(AddressPage(items = emptyList(), currentPage = 1, totalCount = 0))
+
+            viewModel.onQueryChange("테헤란로")
+            viewModel.onSidoChange(Sido.SEOUL)
+
+            // 사용자 입력 query는 그대로 유지되어야 한다 (입력칸 변화 없음).
+            assertThat(viewModel.uiState.value.query).isEqualTo("테헤란로")
+            assertThat(viewModel.uiState.value.selectedSido).isEqualTo(Sido.SEOUL)
+            // effective query로 호출됐는지 확인이다.
+            coVerify { repository.search("서울특별시 테헤란로", 1, 50) }
+        }
+
+    @Test
+    fun `시도 변경만으로도 같은 base query에 대해 새 호출이 트리거된다`() =
+        runTest {
+            coEvery { repository.search("테헤란로", 1, 50) } returns
+                Result.Success(AddressPage(items = emptyList(), currentPage = 1, totalCount = 0))
+            coEvery { repository.search("서울특별시 테헤란로", 1, 50) } returns
+                Result.Success(AddressPage(items = emptyList(), currentPage = 1, totalCount = 0))
+            coEvery { repository.search("부산광역시 테헤란로", 1, 50) } returns
+                Result.Success(AddressPage(items = emptyList(), currentPage = 1, totalCount = 0))
+
+            viewModel.onQueryChange("테헤란로")
+            viewModel.searchNow()
+            viewModel.onSidoChange(Sido.SEOUL)
+            viewModel.onSidoChange(Sido.BUSAN)
+            viewModel.onSidoChange(null)
+
+            // 4개의 effective query가 각각 한 번씩 호출됐어야 한다 (전체 → 서울 → 부산 → 전체).
+            coVerify(exactly = 2) { repository.search("테헤란로", 1, 50) }
+            coVerify(exactly = 1) { repository.search("서울특별시 테헤란로", 1, 50) }
+            coVerify(exactly = 1) { repository.search("부산광역시 테헤란로", 1, 50) }
+        }
+
+    @Test
+    fun `시도 선택 후 loadMore도 동일한 prefix를 유지한다`() =
+        runTest {
+            val page1 =
+                listOf(Address("06234", "서울 도로명1", "서울 지번1", "Eng1"))
+            val page2 =
+                listOf(Address("06235", "서울 도로명2", "서울 지번2", "Eng2"))
+
+            coEvery { repository.search("서울특별시 테헤란로", 1, 50) } returns
+                Result.Success(AddressPage(items = page1, currentPage = 1, totalCount = 100))
+            coEvery { repository.search("서울특별시 테헤란로", 2, 50) } returns
+                Result.Success(AddressPage(items = page2, currentPage = 2, totalCount = 100))
+
+            viewModel.onQueryChange("테헤란로")
+            viewModel.onSidoChange(Sido.SEOUL)
+            viewModel.loadMore()
+
+            // page 2도 동일한 effective query("서울특별시 테헤란로")로 호출돼야 한다.
+            coVerify { repository.search("서울특별시 테헤란로", 2, 50) }
+            val phase = viewModel.uiState.value.phase as SearchUiState.Phase.Success
+            assertThat(phase.results).hasSize(2)
+        }
+
+    @Test
+    fun `query가 짧으면 시도 변경에도 검색이 트리거되지 않는다`() =
+        runTest {
+            // MIN_QUERY_LEN = 2 미만 (1글자)이면 sido 변경만으로 API 호출되지 않아야 한다.
+            viewModel.onQueryChange("강")
+            viewModel.onSidoChange(Sido.SEOUL)
+
+            assertThat(viewModel.uiState.value.selectedSido).isEqualTo(Sido.SEOUL)
+            coVerify(exactly = 0) { repository.search(any(), any(), any()) }
+        }
+
+    @Test
+    fun `query 입력 후 debounce 만료 전 시도 변경 시 같은 effective 호출이 두 번 일어나지 않는다`() =
+        runTest {
+            // dedup 회귀 가드: queryFlow의 filter가 raw로 비교하면, sido 선택으로 effective 호출이 먼저 나간 뒤
+            // debounce 발화 시 raw가 lastTriggeredQuery(effective)와 달라 한 번 더 같은 effective가 호출된다.
+            coEvery { repository.search("서울특별시 테헤란로", 1, 50) } returns
+                Result.Success(AddressPage(items = emptyList(), currentPage = 1, totalCount = 0))
+
+            viewModel.onQueryChange("테헤란로")
+            viewModel.onSidoChange(Sido.SEOUL)
+            advanceTimeBy(DEBOUNCE_MS_FOR_TEST + 1)
+
+            // 정확히 한 번만 호출돼야 한다.
+            coVerify(exactly = 1) { repository.search("서울특별시 테헤란로", 1, 50) }
+            // raw "테헤란로"는 절대 호출되지 않아야 한다 (sido prefix가 항상 붙는다).
+            coVerify(exactly = 0) { repository.search("테헤란로", any(), any()) }
+        }
+
+    @Test
+    fun `같은 시도 칩을 다시 눌러도 검색이 재호출되지 않는다`() =
+        runTest {
+            coEvery { repository.search("서울특별시 강남", 1, 50) } returns
+                Result.Success(AddressPage(items = emptyList(), currentPage = 1, totalCount = 0))
+
+            viewModel.onQueryChange("강남")
+            viewModel.onSidoChange(Sido.SEOUL)
+            // 같은 칩 재클릭 — UI상 toggle이 아니라 noop이어야 한다.
+            viewModel.onSidoChange(Sido.SEOUL)
+
+            coVerify(exactly = 1) { repository.search("서울특별시 강남", 1, 50) }
+        }
+
+    private companion object {
+        // SearchViewModel.DEBOUNCE_MS와 동일해야 한다 (private companion 접근 불가로 상수 복제).
+        const val DEBOUNCE_MS_FOR_TEST = 700L
+    }
 }

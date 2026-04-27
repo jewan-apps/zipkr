@@ -2,12 +2,16 @@ package com.jewan.zipkr.ui.search
 
 import com.jewan.zipkr.data.Address
 import com.jewan.zipkr.data.AppError
+import com.jewan.zipkr.data.Sido
 
 /**
  * 검색 화면의 단일 진실 상태이다.
+ * selectedSido는 시·도 칩 선택 상태이고 null은 "전체"이다.
+ * 사용자가 입력한 query는 그대로 유지되고, ViewModel이 effective query에 prefix를 합성해 호출한다.
  */
 data class SearchUiState(
     val query: String = "",
+    val selectedSido: Sido? = null,
     val phase: Phase = Phase.Idle,
 ) {
     sealed interface Phase {

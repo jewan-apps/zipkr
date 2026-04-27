@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.jewan.zipkr.data.AddressPage
 import com.jewan.zipkr.data.AddressRepository
 import com.jewan.zipkr.data.Result
+import com.jewan.zipkr.data.Sido
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -49,7 +50,9 @@ class SearchViewModel
                     .debounce(DEBOUNCE_MS)
                     .distinctUntilChanged()
                     .filter { it.length >= MIN_QUERY_LEN }
-                    .filter { it != lastTriggeredQuery }
+                    // lastTriggeredQuery는 effective query 기준이므로 비교도 effective로 해야 한다.
+                    // 그렇지 않으면 사용자가 입력 후 700ms 이내에 시·도 칩을 눌렀을 때 debounce 발화로 같은 effective 호출이 한 번 더 발생한다.
+                    .filter { effectiveQuery(it, _uiState.value.selectedSido) != lastTriggeredQuery }
                     .onEach { runSearch(it) }
                     .collect { /* no-op */ }
             }
@@ -74,6 +77,20 @@ class SearchViewModel
         }
 
         /**
+         * 시·도 칩 토글이다. null은 "전체"이고, 같은 칩을 다시 누르면 해제(null)된다.
+         * 명시적 사용자 액션이므로 debounce 없이 즉시 재검색한다 (현재 query의 effective 합성이 달라짐).
+         * lastTriggeredQuery는 effective query 기준이므로 sido만 바꿔도 새 호출이 트리거된다.
+         */
+        fun onSidoChange(sido: Sido?) {
+            // 같은 칩을 다시 누른 경우 (특히 "전체" 재클릭) 의미 변화가 없으므로 재호출을 막는다.
+            if (sido == _uiState.value.selectedSido) return
+            _uiState.value = _uiState.value.copy(selectedSido = sido)
+            if (_uiState.value.query.length >= MIN_QUERY_LEN) {
+                runSearch(_uiState.value.query)
+            }
+        }
+
+        /**
          * 리스트 끝에 도달했을 때 다음 page를 fetch한다.
          * 중복 호출 방지: isLoadingMore 상태이거나 hasNext가 false면 즉시 return한다.
          * loadMoreJob을 추적해 새 query 검색(runSearch)에서 cancel할 수 있다.
@@ -93,9 +110,11 @@ class SearchViewModel
                 _uiState.value.copy(
                     phase = current.copy(isLoadingMore = true, loadMoreError = null),
                 )
+            // page 2+도 동일한 sido prefix를 유지해야 한다 (서울 검색의 다음 페이지가 전국으로 섞이면 안 됨).
+            val effective = effectiveQuery(query, _uiState.value.selectedSido)
             loadMoreJob =
                 viewModelScope.launch {
-                    val result = repository.search(query, page = current.currentPage + 1, pageSize = PAGE_SIZE)
+                    val result = repository.search(effective, page = current.currentPage + 1, pageSize = PAGE_SIZE)
                     val nextPhase = mapLoadMore(result, current)
                     _uiState.value = _uiState.value.copy(phase = nextPhase)
                 }
@@ -136,19 +155,32 @@ class SearchViewModel
                 return
             }
             // 5자리 숫자 입력은 우편번호 역검색 시도로 판단해 API 호출 없이 안내 Phase로 전환한다.
+            // 시·도 prefix 합성 전에 판정해야 사용자가 입력한 5자리 숫자만 정확히 잡힌다.
             if (query.matches(POSTAL_CODE_PATTERN)) {
                 lastTriggeredQuery = query
                 _uiState.value = _uiState.value.copy(phase = SearchUiState.Phase.PostalCodeUnsupported)
                 return
             }
-            lastTriggeredQuery = query
+            // effective query를 trigger 키로 쓰면 sido 변경만으로도 같은 base query에 대해 새 호출이 트리거된다.
+            val effective = effectiveQuery(query, _uiState.value.selectedSido)
+            lastTriggeredQuery = effective
             _uiState.value = _uiState.value.copy(phase = SearchUiState.Phase.Loading)
             inFlight =
                 viewModelScope.launch {
-                    val result = repository.search(query, page = 1, pageSize = PAGE_SIZE)
+                    val result = repository.search(effective, page = 1, pageSize = PAGE_SIZE)
                     _uiState.value = _uiState.value.copy(phase = mapFirstPage(result))
                 }
         }
+
+        /**
+         * 사용자 입력 query 앞에 시·도 prefix를 붙인 effective query를 반환한다.
+         * sido가 null("전체")이면 query 그대로 반환한다.
+         * Repository·캐싱·페이징은 본 effective query를 단일 키로 사용한다.
+         */
+        private fun effectiveQuery(
+            query: String,
+            sido: Sido?,
+        ): String = if (sido == null) query else "${sido.apiPrefix} $query"
 
         /** 첫 page(runSearch) 결과를 매핑한다. accumulated 없이 단순 변환만 한다. */
         private fun mapFirstPage(result: Result<AddressPage>): SearchUiState.Phase =

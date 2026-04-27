@@ -3,16 +3,14 @@ package com.jewan.zipkr.ui.search
 import android.os.Build
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -21,17 +19,17 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -46,15 +44,16 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jewan.zipkr.R
 import com.jewan.zipkr.data.AppError
-import com.jewan.zipkr.ui.components.AddressResultCard
 import com.jewan.zipkr.ui.components.EmptyState
 import com.jewan.zipkr.ui.components.ErrorView
+import com.jewan.zipkr.ui.components.SidoAnchor
+import com.jewan.zipkr.ui.components.SidoSelectorSheet
 import com.jewan.zipkr.ui.theme.ZipkrSpacing
 import com.jewan.zipkr.util.copyToClipboard
 import com.jewan.zipkr.util.lightHaptic
 
-// 리스트 끝에서 이 숫자만큼 앞서 다음 page를 미리 fetch해 UX를 부드럽게 한다.
-private const val PREFETCH_THRESHOLD = 5
+// SidoAnchor.ANCHOR_RADIUS와 동일한 값. 두 컴포넌트가 한 줄에서 같은 코너 곡률을 공유한다.
+private val SEARCH_BAR_RADIUS = 14.dp
 
 /**
  * 검색 메인 화면이다.
@@ -80,6 +79,9 @@ fun SearchScreen(
         keyboard?.show()
     }
 
+    // 시트 열림 상태는 순수 UI 상태이므로 ViewModel에 두지 않고 화면 내 saveable로 관리.
+    var sheetOpen by rememberSaveable { mutableStateOf(false) }
+
     val callbacks =
         rememberSearchCallbacks(
             context = context,
@@ -87,31 +89,54 @@ fun SearchScreen(
             copyToastTemplate = copyToastTemplate,
             onCardClick = onCardClick,
             viewModel = viewModel,
+            onOpenSheet = {
+                keyboard?.hide()
+                sheetOpen = true
+            },
+            onSubmitExtra = { keyboard?.hide() },
         )
 
     Scaffold(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }) },
     ) { padding ->
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(ZipkrSpacing.md),
-            // 입력칸·결과 사이 spacing을 카드 간 spacing(SearchResultsList의 sm)과 동일하게 맞춰 시각 일관성.
-            verticalArrangement = Arrangement.spacedBy(ZipkrSpacing.sm),
+        SearchScreenContent(state = state, focus = focus, callbacks = callbacks, contentPadding = padding)
+    }
+
+    if (sheetOpen) {
+        SidoSelectorSheet(
+            selected = state.selectedSido,
+            onSelect = viewModel::onSidoChange,
+            onDismiss = { sheetOpen = false },
+        )
+    }
+}
+
+@Composable
+private fun SearchScreenContent(
+    state: SearchUiState,
+    focus: FocusRequester,
+    callbacks: SearchCallbacks,
+    contentPadding: PaddingValues,
+) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(contentPadding).padding(ZipkrSpacing.md),
+        verticalArrangement = Arrangement.spacedBy(ZipkrSpacing.sm),
+    ) {
+        // 시·도 앵커는 검색바와 같은 줄 좌측 prefix로 — 한 줄에 [지역 ▾] [입력창]을 묶어 흐름이 한 호흡으로 읽힌다.
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(ZipkrSpacing.sm),
         ) {
+            SidoAnchor(selected = state.selectedSido, onOpen = callbacks.onOpenSheet)
             SearchBar(
                 query = state.query,
-                onQueryChange = viewModel::onQueryChange,
-                onSearch = {
-                    viewModel.searchNow()
-                    keyboard?.hide()
-                },
+                onQueryChange = callbacks.onQueryChange,
+                onSearch = callbacks.onSubmit,
                 focus = focus,
+                modifier = Modifier.weight(1f),
             )
-            SearchBody(phase = state.phase, callbacks = callbacks)
         }
+        SearchBody(phase = state.phase, callbacks = callbacks)
     }
 }
 
@@ -122,9 +147,16 @@ private fun rememberSearchCallbacks(
     copyToastTemplate: String,
     onCardClick: (zip: String) -> Unit,
     viewModel: SearchViewModel,
+    onOpenSheet: () -> Unit,
+    onSubmitExtra: () -> Unit,
 ): SearchCallbacks =
-    remember(context, view, copyToastTemplate, onCardClick, viewModel) {
+    remember(context, view, copyToastTemplate, onCardClick, viewModel, onOpenSheet, onSubmitExtra) {
         SearchCallbacks(
+            onQueryChange = viewModel::onQueryChange,
+            onSubmit = {
+                viewModel.searchNow()
+                onSubmitExtra()
+            },
             onCopyAddress = { label, text ->
                 context.copyToClipboard(label, text)
                 view.lightHaptic()
@@ -136,6 +168,7 @@ private fun rememberSearchCallbacks(
             onCardClick = onCardClick,
             onRetry = viewModel::searchNow,
             onLoadMore = viewModel::loadMore,
+            onOpenSheet = onOpenSheet,
         )
     }
 
@@ -173,13 +206,16 @@ private fun SearchBar(
     onQueryChange: (String) -> Unit,
     onSearch: () -> Unit,
     focus: FocusRequester,
+    modifier: Modifier = Modifier,
 ) {
     OutlinedTextField(
         value = query,
         onValueChange = onQueryChange,
         placeholder = { Text(stringResource(R.string.search_placeholder)) },
         singleLine = true,
-        modifier = Modifier.fillMaxWidth().focusRequester(focus),
+        // 시·도 앵커와 동일한 14dp radius로 통일 — 한 줄에서 한 컴포넌트로 읽히게 한다.
+        shape = RoundedCornerShape(SEARCH_BAR_RADIUS),
+        modifier = modifier.focusRequester(focus),
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         // 키보드 검색 버튼은 debounce를 기다리지 않고 즉시 검색 + 키보드 닫기 (즉시성).
         keyboardActions = KeyboardActions(onSearch = { onSearch() }),
@@ -198,14 +234,17 @@ private fun SearchBar(
 }
 
 /**
- * SearchBody에 전달하는 콜백 묶음이다.
- * 헌법 §1.7 인자 4개 룰을 만족하기 위해 data class로 묶고, 각 phase 분기에서 필요한 것만 사용한다.
+ * 화면 액션 콜백 묶음이다.
+ * 헌법 §1.7 인자 4개 룰을 만족하기 위해 data class로 묶고, 각 자식 컴포저블이 필요한 것만 사용한다.
  */
 private data class SearchCallbacks(
+    val onQueryChange: (String) -> Unit,
+    val onSubmit: () -> Unit,
     val onCopyAddress: (label: String, text: String) -> Unit,
     val onCardClick: (String) -> Unit,
     val onRetry: () -> Unit,
     val onLoadMore: () -> Unit,
+    val onOpenSheet: () -> Unit,
 )
 
 @Composable
@@ -249,86 +288,5 @@ private fun SearchBody(
                 onCardClick = callbacks.onCardClick,
                 onLoadMore = callbacks.onLoadMore,
             )
-    }
-}
-
-/**
- * 검색 결과 리스트이다.
- * 무한 스크롤: 마지막 아이템에서 PREFETCH_THRESHOLD번째 전 시점에 onLoadMore를 호출한다.
- * isLoadingMore 상태에서는 하단에 작은 스피너를 추가한다.
- */
-@Composable
-private fun SearchResultsList(
-    phase: SearchUiState.Phase.Success,
-    onCopyAddress: (label: String, text: String) -> Unit,
-    onCardClick: (String) -> Unit,
-    onLoadMore: () -> Unit,
-) {
-    val listState = rememberLazyListState()
-
-    LazyColumn(
-        state = listState,
-        verticalArrangement = Arrangement.spacedBy(ZipkrSpacing.sm),
-    ) {
-        items(phase.results) { address ->
-            AddressResultCard(
-                address = address,
-                onCardClick = { onCardClick(address.zipCode) },
-                onCopyAddress = onCopyAddress,
-            )
-        }
-        if (phase.isLoadingMore) {
-            item { LoadMoreSpinner() }
-        } else if (phase.loadMoreError != null) {
-            item { LoadMoreRetry(onClick = onLoadMore) }
-        }
-    }
-
-    AutoLoadMoreEffect(listState = listState, phase = phase, onLoadMore = onLoadMore)
-}
-
-@Composable
-private fun LoadMoreSpinner() {
-    Box(
-        modifier = Modifier.fillMaxWidth().padding(ZipkrSpacing.md),
-        contentAlignment = Alignment.Center,
-    ) {
-        CircularProgressIndicator(modifier = Modifier.size(24.dp))
-    }
-}
-
-@Composable
-private fun LoadMoreRetry(onClick: () -> Unit) {
-    // page 2+ 실패는 누적 results를 유지한 채 마지막 행에만 작은 에러+재시도를 표시한다.
-    TextButton(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth().padding(ZipkrSpacing.md),
-    ) {
-        Text(
-            text = stringResource(R.string.load_more_retry),
-            color = MaterialTheme.colorScheme.error,
-        )
-    }
-}
-
-@Composable
-private fun AutoLoadMoreEffect(
-    listState: LazyListState,
-    phase: SearchUiState.Phase.Success,
-    onLoadMore: () -> Unit,
-) {
-    // scroll 위치 변화만 derivedStateOf로 최적화한다. phase 조건은 LaunchedEffect 키로 정확히 처리해
-    // page 2+ 진행/loadMoreError 발생 시 stale 캡처 없이 즉시 반영되게 한다.
-    val endReached by remember {
-        derivedStateOf {
-            val info = listState.layoutInfo
-            val lastVisible = info.visibleItemsInfo.lastOrNull()?.index ?: 0
-            val total = info.totalItemsCount
-            total > 0 && lastVisible >= total - PREFETCH_THRESHOLD
-        }
-    }
-    val readyForMore = phase.hasNext && !phase.isLoadingMore && phase.loadMoreError == null
-    LaunchedEffect(endReached, readyForMore) {
-        if (endReached && readyForMore) onLoadMore()
     }
 }
