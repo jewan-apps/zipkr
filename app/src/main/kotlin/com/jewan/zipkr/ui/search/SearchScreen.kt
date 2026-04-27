@@ -98,6 +98,8 @@ fun SearchScreen(
                     .fillMaxSize()
                     .padding(padding)
                     .padding(ZipkrSpacing.md),
+            // 입력칸·결과 사이 spacing을 카드 간 spacing(SearchResultsList의 sm)과 동일하게 맞춰 시각 일관성.
+            verticalArrangement = Arrangement.spacedBy(ZipkrSpacing.sm),
         ) {
             SearchBar(
                 query = state.query,
