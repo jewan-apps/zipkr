@@ -49,6 +49,7 @@ import com.jewan.zipkr.data.AppError
 import com.jewan.zipkr.ui.components.AddressResultCard
 import com.jewan.zipkr.ui.components.EmptyState
 import com.jewan.zipkr.ui.components.ErrorView
+import com.jewan.zipkr.ui.components.SidoChipRow
 import com.jewan.zipkr.ui.theme.ZipkrSpacing
 import com.jewan.zipkr.util.copyToClipboard
 import com.jewan.zipkr.util.lightHaptic
@@ -109,6 +110,11 @@ fun SearchScreen(
                     keyboard?.hide()
                 },
                 focus = focus,
+            )
+            // 시·도 칩은 SearchBar 바로 아래에 두어 입력→필터→결과의 시각 흐름을 유지한다.
+            SidoChipRow(
+                selected = state.selectedSido,
+                onSelect = viewModel::onSidoChange,
             )
             SearchBody(phase = state.phase, callbacks = callbacks)
         }
