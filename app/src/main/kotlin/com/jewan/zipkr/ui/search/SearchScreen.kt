@@ -136,7 +136,7 @@ private fun SearchScreenContent(
                 modifier = Modifier.weight(1f),
             )
         }
-        SearchBody(phase = state.phase, callbacks = callbacks)
+        SearchBody(phase = state.phase, query = state.query, callbacks = callbacks)
     }
 }
 
@@ -250,6 +250,7 @@ private data class SearchCallbacks(
 @Composable
 private fun SearchBody(
     phase: SearchUiState.Phase,
+    query: String,
     callbacks: SearchCallbacks,
 ) {
     when (phase) {
@@ -284,6 +285,7 @@ private fun SearchBody(
         is SearchUiState.Phase.Success ->
             SearchResultsList(
                 phase = phase,
+                query = query,
                 onCopyAddress = callbacks.onCopyAddress,
                 onCardClick = callbacks.onCardClick,
                 onLoadMore = callbacks.onLoadMore,

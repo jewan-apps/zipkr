@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -41,6 +42,7 @@ import com.jewan.zipkr.R
 import com.jewan.zipkr.data.Address
 import com.jewan.zipkr.ui.theme.ZipkrSpacing
 import com.jewan.zipkr.ui.theme.ZipkrTheme
+import com.jewan.zipkr.util.highlightQuery
 
 // CardBody 우편번호 점보 + label 시각 토큰
 private val ZIP_NUMBER_SIZE = 28.sp
@@ -75,6 +77,7 @@ private val SEGMENT_DIVIDER_WIDTH = 1.dp
 @Composable
 fun AddressResultCard(
     address: Address,
+    query: String,
     onCardClick: () -> Unit,
     onCopyAddress: (label: String, text: String) -> Unit,
     modifier: Modifier = Modifier,
@@ -92,7 +95,7 @@ fun AddressResultCard(
         shape = MaterialTheme.shapes.medium,
     ) {
         Column {
-            CardBody(address)
+            CardBody(address = address, query = query)
             HorizontalDivider()
             CopyBar(
                 onCopyZip = { onCopyAddress(zipLabel, address.zipCode) },
@@ -105,18 +108,28 @@ fun AddressResultCard(
 }
 
 @Composable
-private fun CardBody(address: Address) {
+private fun CardBody(
+    address: Address,
+    query: String,
+) {
+    // 매칭된 토큰만 brand 색 + SemiBold로 강조한다. ViewModel이 합성한 시·도 prefix는 query에 포함되지 않으므로
+    // "서울특별시"가 빈번히 강조되는 노이즈는 발생하지 않는다.
+    val highlightStyle =
+        SpanStyle(
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.SemiBold,
+        )
     Column(
         modifier = Modifier.padding(ZipkrSpacing.md),
         verticalArrangement = Arrangement.spacedBy(ZipkrSpacing.xs),
     ) {
         Text(
-            text = address.roadAddress,
+            text = highlightQuery(address.roadAddress, query, highlightStyle),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
         )
         Text(
-            text = address.jibunAddress,
+            text = highlightQuery(address.jibunAddress, query, highlightStyle),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -143,7 +156,7 @@ private fun CardBody(address: Address) {
             )
         }
         Text(
-            text = address.englishAddress,
+            text = highlightQuery(address.englishAddress, query, highlightStyle),
             style = MaterialTheme.typography.bodySmall,
             fontStyle = FontStyle.Italic,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -287,6 +300,7 @@ private fun AddressResultCardPreview() {
                     jibunAddress = "역삼동 736-1",
                     englishAddress = "123, Teheran-ro, Gangnam-gu, Seoul",
                 ),
+            query = "테헤란",
             onCardClick = {},
             onCopyAddress = { _, _ -> },
         )
