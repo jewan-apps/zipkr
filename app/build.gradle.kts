@@ -38,6 +38,16 @@ android {
             }
         val jusoKey = localProps.getProperty("juso.api.key", "")
         buildConfigField("String", "JUSO_API_KEY", "\"$jusoKey\"")
+
+        // 카카오 키 두 개. REST = geocoding (Authorization header), JS = WebView 카카오맵 (HTML appkey).
+        // 둘 다 같은 dev console 앱 등록에서 발급 (Web 플랫폼 등록 + 도메인 https://localhost 추가 필요).
+        val kakaoRestKey = localProps.getProperty("kakao.rest.api.key", "")
+        buildConfigField("String", "KAKAO_REST_API_KEY", "\"$kakaoRestKey\"")
+        val kakaoJsKey = localProps.getProperty("kakao.js.api.key", "")
+        buildConfigField("String", "KAKAO_JS_KEY", "\"$kakaoJsKey\"")
+        if (kakaoRestKey.isBlank() || kakaoJsKey.isBlank()) {
+            println("⚠ kakao.rest.api.key / kakao.js.api.key가 local.properties에 없다. 상세 시트 지도가 동작하지 않는다.")
+        }
         buildConfigField("String", "ADMOB_APP_ID", "\"ca-app-pub-3940256099942544~3347511713\"")
         buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"ca-app-pub-3940256099942544/6300978111\"")
         manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
