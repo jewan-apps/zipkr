@@ -37,6 +37,7 @@ private const val PREFETCH_THRESHOLD = 5
 @Composable
 internal fun SearchResultsList(
     phase: SearchUiState.Phase.Success,
+    query: String,
     onCopyAddress: (label: String, text: String) -> Unit,
     onCardClick: (String) -> Unit,
     onLoadMore: () -> Unit,
@@ -50,6 +51,7 @@ internal fun SearchResultsList(
         items(phase.results) { address ->
             AddressResultCard(
                 address = address,
+                query = query,
                 onCardClick = { onCardClick(address.zipCode) },
                 onCopyAddress = onCopyAddress,
             )
