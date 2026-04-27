@@ -72,4 +72,44 @@ class JusoModelsTest {
         // 기본값 방어이다. 구버전 API 호환 시 0으로 처리되어 더 이상 페이지 없음으로 취급된다.
         assertThat(common.totalCount).isEqualTo("0")
     }
+
+    @Test
+    fun `toDomain 매핑 시 행안부 raw 응답의 bdNm·siNm·sggNm·emdNm가 Address 신규 필드로 들어간다`() {
+        val dto =
+            JusoAddressDto(
+                roadAddr = "경기도 평택시 안중읍 안현로 400",
+                jibunAddr = "경기도 평택시 안중읍 안중리 445-16 안중읍행정복지센터",
+                engAddr = "400 Anhyeon-ro, Anjung-eup, Pyeongtaek-si, Gyeonggi-do",
+                zipNo = "17941",
+                bdNm = "안중읍행정복지센터",
+                siNm = "경기도",
+                sggNm = "평택시",
+                emdNm = "안중읍",
+            )
+
+        val domain = dto.toDomain()
+
+        assertThat(domain.zipCode).isEqualTo("17941")
+        assertThat(domain.buildingName).isEqualTo("안중읍행정복지센터")
+        assertThat(domain.sido).isEqualTo("경기도")
+        assertThat(domain.sigungu).isEqualTo("평택시")
+        assertThat(domain.eupmyeondong).isEqualTo("안중읍")
+    }
+
+    @Test
+    fun `bdNm이 빈 문자열이면 Address buildingName도 빈 문자열이다`() {
+        val dto =
+            JusoAddressDto(
+                roadAddr = "도로명",
+                jibunAddr = "지번",
+                engAddr = "Eng",
+                zipNo = "12345",
+                bdNm = "",
+                siNm = "서울",
+                sggNm = "강남구",
+                emdNm = "역삼동",
+            )
+
+        assertThat(dto.toDomain().buildingName).isEqualTo("")
+    }
 }
