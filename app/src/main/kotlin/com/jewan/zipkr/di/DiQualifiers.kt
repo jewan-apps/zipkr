@@ -7,4 +7,7 @@ package com.jewan.zipkr.di
  */
 object DiQualifiers {
     const val JUSO_API_KEY = "juso_api_key"
+    const val KAKAO_REST_API_KEY = "kakao_rest_api_key"
+    const val JUSO_OKHTTP = "juso_okhttp"
+    const val KAKAO_OKHTTP = "kakao_okhttp"
 }
