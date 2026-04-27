@@ -2,9 +2,10 @@ package com.jewan.zipkr.data
 
 /**
  * 행정구역 시·도이다.
- * displayName은 칩 라벨이고 apiPrefix는 검색 query 앞에 붙여 정확도를 높이는 prefix이다.
- * 행안부 API는 별도 sido 파라미터를 안정적으로 지원하지 않아 단순 prefix 방식을 택한다.
+ * - displayName: 칩·앵커 라벨 (한글 짧은 이름)
+ * - apiPrefix: 검색 query 앞에 붙여 정확도를 높이는 prefix (행안부 정식 명칭)
  *
+ * 행안부 API는 별도 sido 파라미터를 안정적으로 지원하지 않아 단순 prefix 방식을 택한다.
  * "전체"는 별도 enum 값이 아니라 selectedSido = null로 표현한다 (sentinel 회피).
  */
 enum class Sido(
@@ -12,14 +13,14 @@ enum class Sido(
     val apiPrefix: String,
 ) {
     SEOUL("서울", "서울특별시"),
+    GYEONGGI("경기", "경기도"),
+    INCHEON("인천", "인천광역시"),
     BUSAN("부산", "부산광역시"),
     DAEGU("대구", "대구광역시"),
-    INCHEON("인천", "인천광역시"),
     GWANGJU("광주", "광주광역시"),
     DAEJEON("대전", "대전광역시"),
     ULSAN("울산", "울산광역시"),
     SEJONG("세종", "세종특별자치시"),
-    GYEONGGI("경기", "경기도"),
     GANGWON("강원", "강원특별자치도"),
     CHUNGBUK("충북", "충청북도"),
     CHUNGNAM("충남", "충청남도"),

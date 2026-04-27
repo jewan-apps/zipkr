@@ -16,7 +16,12 @@
     <string name="copy_english_label">영문 주소</string>
     <string name="copy_english_short">영문주소</string>
     <string name="clear_query_action">검색어 지우기</string>
-    <string name="sido_chip_all">전체</string>
+
+    <!-- 시·도 필터 — 앵커 + 바텀시트 패턴 -->
+    <string name="sido_anchor_default">전국</string>
+    <string name="sido_anchor_action">지역 선택</string>
+    <string name="sido_sheet_title">지역 선택</string>
+    <string name="sido_sheet_reset">↻ 초기화</string>
     <string name="load_more_retry">불러오기 실패. 다시 시도</string>
 
     <!-- 에러 메시지: ViewModel은 AppError type만 보내고, Composable이 본 키로 매핑한다.
