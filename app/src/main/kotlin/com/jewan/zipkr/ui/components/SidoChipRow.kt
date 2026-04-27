@@ -16,9 +16,10 @@ import com.jewan.zipkr.ui.theme.ZipkrSpacing
 
 /**
  * 시·도 선택 칩 row이다.
- * "전체" + 17개 시·도, LazyRow 가로 스크롤. 단일 선택(radio 동작)이며 같은 칩을 다시 누르면 해제(null)된다.
+ * "전체" + 17개 시·도, LazyRow 가로 스크롤. 순수 radio 그룹이며 toggle 동작은 없다.
  *
- * 첫 칩 "전체"는 selectedSido == null과 매핑되고 클릭 시 항상 null을 호출한다 (toggle 아님 — radio 그룹의 default).
+ * 같은 칩 재클릭은 ViewModel에서 noop으로 흡수된다 — 이중 검색·깜빡임 방지.
+ * 선택 해제(전국으로 되돌리기)는 "전체" 칩을 통해서만 한다 (의도가 명확).
  */
 @Composable
 fun SidoChipRow(
@@ -42,7 +43,7 @@ fun SidoChipRow(
         items(items = Sido.ORDERED, key = { it.name }) { sido ->
             FilterChip(
                 selected = selected == sido,
-                onClick = { onSelect(if (selected == sido) null else sido) },
+                onClick = { onSelect(sido) },
                 label = { Text(sido.displayName) },
                 colors = FilterChipDefaults.filterChipColors(),
             )
