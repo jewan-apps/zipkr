@@ -9,12 +9,35 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.detekt)
     alias(libs.plugins.ktlint)
-    // google-services / crashlytics는 Phase 7에서 활성화
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
 }
 
 android {
     namespace = "com.jewan.zipkr"
     compileSdk = 34
+
+    // 키스토어 정보는 keystore.properties에서 읽는다 (gitignore 처리됨).
+    // 파일이 없거나 storeFile이 비면 release signing이 비활성화된다 — release 빌드 실패 유도.
+    val keystoreProps =
+        Properties().apply {
+            val file = rootProject.file("keystore.properties")
+            if (file.exists()) load(file.inputStream())
+        }
+
+    signingConfigs {
+        create("release") {
+            val storeFilePath = keystoreProps.getProperty("storeFile", "")
+            if (storeFilePath.isNotBlank()) {
+                storeFile = file(storeFilePath)
+                storePassword = keystoreProps.getProperty("storePassword", "")
+                keyAlias = keystoreProps.getProperty("keyAlias", "")
+                keyPassword = keystoreProps.getProperty("keyPassword", "")
+            } else {
+                println("⚠ keystore.properties가 없거나 storeFile이 비었다 — release 빌드는 서명 실패한다.")
+            }
+        }
+    }
 
     defaultConfig {
         applicationId = "com.jewan.zipkr"
@@ -67,8 +90,24 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            // 실 AdMob ID는 Phase 7에서 local.properties → BuildConfig + manifestPlaceholders 동시 override.
-            // Phase 7 전까지 release를 빌드하면 테스트 ID로 나가므로 출시 절대 금지.
+            signingConfig = signingConfigs.getByName("release")
+
+            // 실 AdMob ID 주입 — local.properties에 admob.app.id / admob.banner.unit.id 있으면 override.
+            // 없으면 defaultConfig의 Google 공식 테스트 ID로 release가 빌드된다 (출시 전 반드시 채워야 함).
+            val localProps =
+                Properties().apply {
+                    val file = rootProject.file("local.properties")
+                    if (file.exists()) load(file.inputStream())
+                }
+            val admobAppId = localProps.getProperty("admob.app.id", "")
+            val admobBannerUnitId = localProps.getProperty("admob.banner.unit.id", "")
+            if (admobAppId.isNotBlank() && admobBannerUnitId.isNotBlank()) {
+                buildConfigField("String", "ADMOB_APP_ID", "\"$admobAppId\"")
+                buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"$admobBannerUnitId\"")
+                manifestPlaceholders["admobAppId"] = admobAppId
+            } else {
+                println("⚠ admob 실 ID가 local.properties에 없다 — release는 테스트 ID로 빌드된다 (출시 전 반드시 채워야 함).")
+            }
         }
     }
 
@@ -137,6 +176,11 @@ dependencies {
     // Accompanist
     implementation(libs.accompanist.permissions)
     implementation(libs.accompanist.systemuicontroller)
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.analytics)
 
     // Logging
     implementation(libs.timber)
