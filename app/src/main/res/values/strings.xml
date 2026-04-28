@@ -7,7 +7,6 @@
     <string name="empty_results_description">다른 검색어로 시도해보세요.</string>
     <string name="copy_toast">%1$s 복사됨</string>
     <string name="copy_zip_label">우편번호</string>
-    <string name="copy_zip_action">우편번호 복사</string>
     <string name="copy_zip_short">우편번호</string>
     <string name="copy_road_label">도로명 주소</string>
     <string name="copy_road_short">도로명주소</string>
