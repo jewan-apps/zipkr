@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">우편번호 zipkr</string>
+    <string name="app_name">우편번호</string>
     <string name="search_placeholder">주소를 입력하세요</string>
     <string name="empty_title">어떤 주소든 입력해보세요</string>
     <string name="empty_description">도로명·지번·건물명 모두 검색됩니다.</string>
