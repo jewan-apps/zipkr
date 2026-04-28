@@ -19,3 +19,32 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# kotlinx-serialization — Companion·serializer 함수가 reflection으로 호출되므로 보존한다.
+-keepclassmembers class kotlinx.serialization.json.** {
+    *** Companion;
+}
+-keepclasseswithmembers class kotlinx.serialization.json.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}
+-keep,includedescriptorclasses class com.jewan.zipkr.**$$serializer { *; }
+-keepclassmembers class com.jewan.zipkr.** {
+    *** Companion;
+}
+-keepclasseswithmembers class com.jewan.zipkr.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}
+
+# Retrofit — interface 메서드·어노테이션이 reflection으로 호출된다.
+-keepattributes Signature, InnerClasses, EnclosingMethod
+-keepattributes RuntimeVisibleAnnotations, RuntimeVisibleParameterAnnotations
+-keepclassmembers,allowshrinking,allowobfuscation interface * {
+    @retrofit2.http.* <methods>;
+}
+
+# Hilt — generated component·ViewModel은 보존해야 DI graph가 동작한다.
+-keep class dagger.hilt.android.** { *; }
+-keep class * extends androidx.lifecycle.ViewModel { *; }
+
+# Timber — annotation 누락 경고를 막는다.
+-dontwarn org.jetbrains.annotations.**
