@@ -91,8 +91,23 @@ android {
                 "proguard-rules.pro",
             )
             signingConfig = signingConfigs.getByName("release")
-            // 실 AdMob ID는 Phase 7에서 local.properties → BuildConfig + manifestPlaceholders 동시 override.
-            // Phase 7 전까지 release를 빌드하면 테스트 ID로 나가므로 출시 절대 금지.
+
+            // 실 AdMob ID 주입 — local.properties에 admob.app.id / admob.banner.unit.id 있으면 override.
+            // 없으면 defaultConfig의 Google 공식 테스트 ID로 release가 빌드된다 (출시 전 반드시 채워야 함).
+            val localProps =
+                Properties().apply {
+                    val file = rootProject.file("local.properties")
+                    if (file.exists()) load(file.inputStream())
+                }
+            val admobAppId = localProps.getProperty("admob.app.id", "")
+            val admobBannerUnitId = localProps.getProperty("admob.banner.unit.id", "")
+            if (admobAppId.isNotBlank() && admobBannerUnitId.isNotBlank()) {
+                buildConfigField("String", "ADMOB_APP_ID", "\"$admobAppId\"")
+                buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"$admobBannerUnitId\"")
+                manifestPlaceholders["admobAppId"] = admobAppId
+            } else {
+                println("⚠ admob 실 ID가 local.properties에 없다 — release는 테스트 ID로 빌드된다 (출시 전 반드시 채워야 함).")
+            }
         }
     }
 
