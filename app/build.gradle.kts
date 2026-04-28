@@ -9,7 +9,8 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.detekt)
     alias(libs.plugins.ktlint)
-    // google-services / crashlytics는 Phase 7에서 활성화
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
 }
 
 android {
@@ -137,6 +138,11 @@ dependencies {
     // Accompanist
     implementation(libs.accompanist.permissions)
     implementation(libs.accompanist.systemuicontroller)
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.analytics)
 
     // Logging
     implementation(libs.timber)
