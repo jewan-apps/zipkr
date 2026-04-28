@@ -17,6 +17,28 @@ android {
     namespace = "com.jewan.zipkr"
     compileSdk = 34
 
+    // 키스토어 정보는 keystore.properties에서 읽는다 (gitignore 처리됨).
+    // 파일이 없거나 storeFile이 비면 release signing이 비활성화된다 — release 빌드 실패 유도.
+    val keystoreProps =
+        Properties().apply {
+            val file = rootProject.file("keystore.properties")
+            if (file.exists()) load(file.inputStream())
+        }
+
+    signingConfigs {
+        create("release") {
+            val storeFilePath = keystoreProps.getProperty("storeFile", "")
+            if (storeFilePath.isNotBlank()) {
+                storeFile = file(storeFilePath)
+                storePassword = keystoreProps.getProperty("storePassword", "")
+                keyAlias = keystoreProps.getProperty("keyAlias", "")
+                keyPassword = keystoreProps.getProperty("keyPassword", "")
+            } else {
+                println("⚠ keystore.properties가 없거나 storeFile이 비었다 — release 빌드는 서명 실패한다.")
+            }
+        }
+    }
+
     defaultConfig {
         applicationId = "com.jewan.zipkr"
         minSdk = 24
@@ -68,6 +90,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            signingConfig = signingConfigs.getByName("release")
             // 실 AdMob ID는 Phase 7에서 local.properties → BuildConfig + manifestPlaceholders 동시 override.
             // Phase 7 전까지 release를 빌드하면 테스트 ID로 나가므로 출시 절대 금지.
         }
