@@ -5,18 +5,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -39,8 +34,6 @@ private const val SECONDARY_SEGMENT_WEIGHT = 1f
 private const val ROAD_TINT_ALPHA = 0.10f
 private val SEGMENT_LABEL_SIZE = 12.sp
 private val SEGMENT_VPAD = 14.dp
-private val SEGMENT_ICON_SIZE = 14.dp
-private val SEGMENT_ICON_GAP = 6.dp
 private val SEGMENT_DIVIDER_WIDTH = 1.dp
 
 /**
@@ -100,12 +93,6 @@ private fun ZipSegment(
         shape = RectangleShape,
         contentPadding = PaddingValues(vertical = SEGMENT_VPAD),
     ) {
-        Icon(
-            imageVector = Icons.Outlined.ContentCopy,
-            contentDescription = null,
-            modifier = Modifier.size(SEGMENT_ICON_SIZE),
-        )
-        Spacer(Modifier.width(SEGMENT_ICON_GAP))
         Text(
             text = stringResource(R.string.copy_zip_short),
             fontSize = SEGMENT_LABEL_SIZE,
