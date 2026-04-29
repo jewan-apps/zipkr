@@ -7,7 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,13 +20,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,16 +32,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jewan.zipkr.R
 import com.jewan.zipkr.data.Address
+import com.jewan.zipkr.ui.theme.ZipkrMono
 import com.jewan.zipkr.ui.theme.ZipkrSpacing
 import com.jewan.zipkr.ui.theme.ZipkrTheme
 import com.jewan.zipkr.util.highlightQuery
 import kotlinx.coroutines.delay
 
-// CardBody 우편번호 점보 + label 시각 토큰
-private val ZIP_NUMBER_SIZE = 28.sp
-private val ZIP_LABEL_SIZE = 10.sp
-private val ZIP_LABEL_TRACKING = 1.5.sp
-private val ZIP_LABEL_BOTTOM_PAD = 4.dp
+// CardBody 우편번호 점보 시각 토큰. Mono 폰트 + tracking으로 우체국 인쇄물 톤을 만든다.
+private val ZIP_NUMBER_SIZE = 32.sp
+private val ZIP_NUMBER_TRACKING = 2.sp
+
+// 카드 본문 내부 padding — 정보 밀도를 높이기 위해 vertical만 축소한다 (좌우는 16 유지).
+private val CARD_VPAD = 10.dp
+
+// CardBody 줄 사이 간격 — 토큰(xs=4dp)보다 더 좁게 잡는다 (정보 밀도 우선).
+private val CARD_LINE_GAP = 2.dp
 
 // 본문 텍스트 highlight 시각 토큰 — CopyBar segment 누르면 해당 본문 줄이 brand 톤으로 잠깐 강조된다.
 // 배경 tint + 텍스트 색 + scale 조합으로 강한 시각 인지를 만든다.
@@ -137,8 +139,8 @@ private fun CardBody(
     val englishColor by animatedHighlightColor(lastCopied == CopyField.English, brand, onSurfaceVariant)
 
     Column(
-        modifier = Modifier.padding(ZipkrSpacing.md),
-        verticalArrangement = Arrangement.spacedBy(ZipkrSpacing.xs),
+        modifier = Modifier.padding(horizontal = ZipkrSpacing.md, vertical = CARD_VPAD),
+        verticalArrangement = Arrangement.spacedBy(CARD_LINE_GAP),
     ) {
         HighlightableLine(highlighted = lastCopied == CopyField.Road, brand = brand) {
             Text(
@@ -156,11 +158,10 @@ private fun CardBody(
             )
         }
         HighlightableLine(highlighted = lastCopied == CopyField.Zip, brand = brand) {
-            ZipJumboRow(
+            ZipJumbo(
                 zipCode = address.zipCode,
                 highlighted = lastCopied == CopyField.Zip,
                 brand = brand,
-                onSurfaceVariant = onSurfaceVariant,
             )
         }
         HighlightableLine(highlighted = lastCopied == CopyField.English, brand = brand) {
@@ -206,34 +207,23 @@ private fun HighlightableLine(
     }
 }
 
+/**
+ * 우편번호 점보 텍스트만 노출한다 — "우편번호" 라벨은 의미 중복이라 빼고 mono 폰트의 시각 위계로 충분하다.
+ */
 @Composable
-private fun ZipJumboRow(
+private fun ZipJumbo(
     zipCode: String,
     highlighted: Boolean,
     brand: Color,
-    onSurfaceVariant: Color,
 ) {
-    Row(
-        modifier = Modifier.padding(top = ZipkrSpacing.xs),
-        verticalAlignment = Alignment.Bottom,
-        horizontalArrangement = Arrangement.spacedBy(ZipkrSpacing.sm),
-    ) {
-        Text(
-            text = zipCode,
-            fontSize = ZIP_NUMBER_SIZE,
-            fontFamily = FontFamily.Monospace,
-            fontWeight = if (highlighted) FontWeight.ExtraBold else FontWeight.SemiBold,
-            color = brand,
-        )
-        Text(
-            text = stringResource(R.string.copy_zip_label),
-            fontSize = ZIP_LABEL_SIZE,
-            letterSpacing = ZIP_LABEL_TRACKING,
-            fontWeight = FontWeight.SemiBold,
-            color = if (highlighted) brand else onSurfaceVariant,
-            modifier = Modifier.padding(bottom = ZIP_LABEL_BOTTOM_PAD),
-        )
-    }
+    Text(
+        text = zipCode,
+        fontSize = ZIP_NUMBER_SIZE,
+        fontFamily = ZipkrMono,
+        fontWeight = if (highlighted) FontWeight.ExtraBold else FontWeight.Bold,
+        letterSpacing = ZIP_NUMBER_TRACKING,
+        color = brand,
+    )
 }
 
 @Composable

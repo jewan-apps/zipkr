@@ -3,6 +3,8 @@ package com.jewan.zipkr.ui.detail
 import android.os.Build
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,10 +13,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -24,6 +28,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,6 +36,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.jewan.zipkr.BuildConfig
 import com.jewan.zipkr.R
@@ -59,6 +66,7 @@ fun DetailSheet(
     viewModel: DetailViewModel = hiltViewModel(),
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
     val coordinatePhase by viewModel.coordinate.collectAsState()
     val context = LocalContext.current
     val view = LocalView.current
@@ -96,6 +104,8 @@ fun DetailSheet(
         shape = RoundedCornerShape(topStart = SHEET_RADIUS, topEnd = SHEET_RADIUS),
         containerColor = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface,
+        // 드래그 핸들 영역 가로 전체를 클릭 가능 영역으로 — 핸들 누르면 시트가 닫힌다.
+        dragHandle = { ClickableDragHandle(scope = scope, sheetState = sheetState, onDismiss = onDismiss) },
     ) {
         DetailSheetContent(
             address = address,
@@ -112,6 +122,37 @@ fun DetailSheet(
 }
 
 private const val HIGHLIGHT_DURATION_MS = 800L
+
+/**
+ * 드래그 핸들 영역 가로 전체를 클릭 가능하게 wrap한다.
+ * 사용자가 핸들 또는 그 주변을 톡 누르면 시트가 부드럽게 닫힌다 — 위로 스와이프 외에 빠른 dismiss 경로 제공.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ClickableDragHandle(
+    scope: CoroutineScope,
+    sheetState: SheetState,
+    onDismiss: () -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(
+                    interactionSource = interactionSource,
+                    // ripple 없이 — 핸들 자체의 시각만 유지한다.
+                    indication = null,
+                ) {
+                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+                        if (!sheetState.isVisible) onDismiss()
+                    }
+                },
+    ) {
+        BottomSheetDefaults.DragHandle()
+    }
+}
 
 private data class CopyLabels(
     val zip: String,
