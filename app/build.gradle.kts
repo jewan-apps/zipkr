@@ -163,6 +163,9 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
+    // Persistence — DataStore Preferences (검색 히스토리·즐겨찾기 영속)
+    implementation(libs.androidx.datastore.preferences)
+
     // Network
     implementation(libs.retrofit)
     implementation(libs.retrofit.kotlinx.serialization)

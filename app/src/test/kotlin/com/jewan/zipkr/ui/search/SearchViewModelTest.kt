@@ -10,6 +10,8 @@ import com.jewan.zipkr.data.Result
 import com.jewan.zipkr.data.Sido
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
+import kotlinx.coroutines.flow.flowOf
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -25,12 +27,18 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class SearchViewModelTest {
     private val repository: AddressRepository = mockk()
+    private val historyRepository: com.jewan.zipkr.data.SearchHistoryRepository =
+        mockk(relaxed = true) {
+            // SearchViewModel이 init에서 두 flow를 stateIn으로 collect하므로 빈 flow를 노출한다.
+            every { observeFavorites() } returns flowOf(emptyList())
+            every { observeRecent() } returns flowOf(emptyList())
+        }
     private lateinit var viewModel: SearchViewModel
 
     @Before
     fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
-        viewModel = SearchViewModel(repository)
+        viewModel = SearchViewModel(repository, historyRepository)
     }
 
     @After

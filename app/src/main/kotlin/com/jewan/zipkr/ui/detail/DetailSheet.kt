@@ -63,40 +63,22 @@ private val PLACEHOLDER_RADIUS = 16.dp
 fun DetailSheet(
     address: Address,
     onDismiss: () -> Unit,
+    query: String = "",
     viewModel: DetailViewModel = hiltViewModel(),
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
     val coordinatePhase by viewModel.coordinate.collectAsState()
-    val context = LocalContext.current
-    val view = LocalView.current
-    val toastTpl = stringResource(R.string.copy_toast)
-
-    val zipLabel = stringResource(R.string.copy_zip_label)
-    val roadLabel = stringResource(R.string.copy_road_label)
-    val jibunLabel = stringResource(R.string.copy_jibun_label)
-    val englishLabel = stringResource(R.string.copy_english_label)
 
     LaunchedEffect(address.roadAddress) {
         viewModel.fetchCoordinate(address.roadAddress)
+        // v1.1k: 시트 진입을 "최근 본 주소" 누적 시그널로 사용한다.
+        viewModel.rememberRecent(address)
     }
 
-    val onCopy: (String, String) -> Unit = { label, text ->
-        context.copyToClipboard(label, text)
-        view.lightHaptic()
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            Toast.makeText(context, toastTpl.format(text), Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    // 사용자가 방금 복사한 항목 — DetailHeader 본문 텍스트가 brand 색으로 잠깐 highlight된다.
-    var lastCopied by remember { mutableStateOf<CopyField?>(null) }
-    LaunchedEffect(lastCopied) {
-        if (lastCopied != null) {
-            kotlinx.coroutines.delay(HIGHLIGHT_DURATION_MS)
-            lastCopied = null
-        }
-    }
+    val isFavorite by viewModel.isFavoriteFlow(address).collectAsState(initial = false)
+    val labels = rememberCopyLabels()
+    val copy = rememberCopyHandler()
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -104,24 +86,64 @@ fun DetailSheet(
         shape = RoundedCornerShape(topStart = SHEET_RADIUS, topEnd = SHEET_RADIUS),
         containerColor = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface,
-        // 드래그 핸들 영역 가로 전체를 클릭 가능 영역으로 — 핸들 누르면 시트가 닫힌다.
         dragHandle = { ClickableDragHandle(scope = scope, sheetState = sheetState, onDismiss = onDismiss) },
     ) {
         DetailSheetContent(
             address = address,
+            query = query,
             coordinatePhase = coordinatePhase,
-            lastCopied = lastCopied,
+            lastCopied = copy.lastCopied,
+            isFavorite = isFavorite,
+            onFavoriteToggle = { viewModel.toggleFavorite(address) },
             onRetry = { viewModel.fetchCoordinate(address.roadAddress) },
-            onCopy = { field, label, text ->
-                onCopy(label, text)
-                lastCopied = field
-            },
-            labels = CopyLabels(zipLabel, roadLabel, jibunLabel, englishLabel),
+            onCopy = copy.onCopy,
+            labels = labels,
         )
     }
 }
 
 private const val HIGHLIGHT_DURATION_MS = 800L
+
+@Composable
+private fun rememberCopyLabels(): CopyLabels =
+    CopyLabels(
+        zip = stringResource(R.string.copy_zip_label),
+        road = stringResource(R.string.copy_road_label),
+        jibun = stringResource(R.string.copy_jibun_label),
+        english = stringResource(R.string.copy_english_label),
+    )
+
+/**
+ * 클립보드 복사 + 햅틱 + 토스트 + lastCopied auto-clear를 묶은 hook.
+ * lastCopied는 HIGHLIGHT_DURATION_MS 이후 null로 자동 해제되어 본문 강조가 잠깐만 유지된다.
+ */
+@Composable
+private fun rememberCopyHandler(): CopyHandler {
+    val context = LocalContext.current
+    val view = LocalView.current
+    val toastTpl = stringResource(R.string.copy_toast)
+    var lastCopied by remember { mutableStateOf<CopyField?>(null) }
+    LaunchedEffect(lastCopied) {
+        if (lastCopied != null) {
+            kotlinx.coroutines.delay(HIGHLIGHT_DURATION_MS)
+            lastCopied = null
+        }
+    }
+    val onCopy: (CopyField, String, String) -> Unit = { field, label, text ->
+        context.copyToClipboard(label, text)
+        view.lightHaptic()
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            Toast.makeText(context, toastTpl.format(text), Toast.LENGTH_SHORT).show()
+        }
+        lastCopied = field
+    }
+    return CopyHandler(lastCopied, onCopy)
+}
+
+private data class CopyHandler(
+    val lastCopied: CopyField?,
+    val onCopy: (CopyField, String, String) -> Unit,
+)
 
 /**
  * 드래그 핸들 영역 가로 전체를 클릭 가능하게 wrap한다.
@@ -164,8 +186,11 @@ private data class CopyLabels(
 @Composable
 private fun DetailSheetContent(
     address: Address,
+    query: String,
     coordinatePhase: CoordinatePhase,
     lastCopied: CopyField?,
+    isFavorite: Boolean,
+    onFavoriteToggle: () -> Unit,
     onRetry: () -> Unit,
     onCopy: (CopyField, String, String) -> Unit,
     labels: CopyLabels,
@@ -174,7 +199,13 @@ private fun DetailSheetContent(
         modifier = Modifier.fillMaxWidth().padding(bottom = ZipkrSpacing.md),
         verticalArrangement = Arrangement.spacedBy(ZipkrSpacing.sm),
     ) {
-        DetailHeader(address = address, lastCopied = lastCopied)
+        DetailHeader(
+            address = address,
+            query = query,
+            lastCopied = lastCopied,
+            isFavorite = isFavorite,
+            onFavoriteToggle = onFavoriteToggle,
+        )
         MapArea(phase = coordinatePhase, onRetry = onRetry)
         MapDeepLinkButtons(
             coord = (coordinatePhase as? CoordinatePhase.Success)?.coordinate,

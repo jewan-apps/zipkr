@@ -60,4 +60,36 @@ class HighlightedTextTest {
         assertThat(result.spanStyles).isEmpty()
         assertThat(result.text).isEqualTo("경기도 평택시 안중읍")
     }
+
+    @Test
+    fun `공백 없는 query가 텍스트의 공백 포함 영역과 매칭된다 (정규화 fallback)`() {
+        val text = "충북 충주시 안현로서7길 45"
+        val result = highlightQuery(text, "안현로서7길45", style)
+
+        // "안현로서7길 45" 영역 통째로 한 span (사이 공백 포함).
+        val span = result.spanStyles.singleOrNull()
+        assertThat(span).isNotNull()
+        assertThat(span!!.start).isEqualTo(text.indexOf("안현"))
+        assertThat(span.end).isEqualTo(text.length)
+    }
+
+    @Test
+    fun `공백 있는 query와 공백 없는 query가 같은 영역을 cover한다`() {
+        val text = "충북 충주시 안현로서7길 45"
+        val withSpace = highlightQuery(text, "안현로서7길 45", style)
+        val withoutSpace = highlightQuery(text, "안현로서7길45", style)
+
+        val expected = (text.indexOf("안현") until text.length).toSet()
+        val withSpaceCover = withSpace.spanStyles.flatMap { (it.start until it.end) }.toSet()
+        val withoutSpaceCover = withoutSpace.spanStyles.flatMap { (it.start until it.end) }.toSet()
+        assertThat(withSpaceCover).containsAtLeastElementsIn(expected)
+        assertThat(withoutSpaceCover).containsAtLeastElementsIn(expected)
+    }
+
+    @Test
+    fun `토큰 매칭이 잡히면 정규화 fallback은 추가 span을 만들지 않는다`() {
+        // "안중"이 토큰 매칭으로 1번 잡히고, 정규화 fallback이 같은 위치를 다시 추가하지 않는다.
+        val result = highlightQuery("경기도 평택시 안중읍", "안중", style)
+        assertThat(result.spanStyles).hasSize(1)
+    }
 }
