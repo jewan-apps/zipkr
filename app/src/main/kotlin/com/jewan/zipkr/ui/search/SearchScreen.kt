@@ -3,6 +3,7 @@ package com.jewan.zipkr.ui.search
 import android.os.Build
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -43,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jewan.zipkr.R
+import com.jewan.zipkr.ads.AdBanner
 import com.jewan.zipkr.data.Address
 import com.jewan.zipkr.data.AppError
 import com.jewan.zipkr.ui.components.EmptyState
@@ -143,7 +145,12 @@ private fun SearchScreenContent(
                 modifier = Modifier.weight(1f),
             )
         }
-        SearchBody(phase = state.phase, query = state.query, callbacks = callbacks)
+        // SearchBody가 fillMaxSize인 EmptyState 등을 가질 수 있어 weight(1f)로 영역 보장한다.
+        // 그래야 마지막 자식 AdBanner가 바닥에 고정되어 그려진다.
+        Box(modifier = Modifier.weight(1f)) {
+            SearchBody(phase = state.phase, query = state.query, callbacks = callbacks)
+        }
+        AdBanner()
     }
 }
 
