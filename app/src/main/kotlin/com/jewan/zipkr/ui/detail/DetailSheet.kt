@@ -22,6 +22,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -33,6 +36,7 @@ import com.jewan.zipkr.BuildConfig
 import com.jewan.zipkr.R
 import com.jewan.zipkr.data.Address
 import com.jewan.zipkr.ui.components.CopyBar
+import com.jewan.zipkr.ui.components.CopyField
 import com.jewan.zipkr.ui.components.KakaoMapWebView
 import com.jewan.zipkr.ui.components.MapDeepLinkButtons
 import com.jewan.zipkr.ui.theme.ZipkrSpacing
@@ -77,6 +81,15 @@ fun DetailSheet(
         }
     }
 
+    // 사용자가 방금 복사한 항목 — DetailHeader 본문 텍스트가 brand 색으로 잠깐 highlight된다.
+    var lastCopied by remember { mutableStateOf<CopyField?>(null) }
+    LaunchedEffect(lastCopied) {
+        if (lastCopied != null) {
+            kotlinx.coroutines.delay(HIGHLIGHT_DURATION_MS)
+            lastCopied = null
+        }
+    }
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -87,12 +100,18 @@ fun DetailSheet(
         DetailSheetContent(
             address = address,
             coordinatePhase = coordinatePhase,
+            lastCopied = lastCopied,
             onRetry = { viewModel.fetchCoordinate(address.roadAddress) },
-            onCopy = onCopy,
+            onCopy = { field, label, text ->
+                onCopy(label, text)
+                lastCopied = field
+            },
             labels = CopyLabels(zipLabel, roadLabel, jibunLabel, englishLabel),
         )
     }
 }
+
+private const val HIGHLIGHT_DURATION_MS = 800L
 
 private data class CopyLabels(
     val zip: String,
@@ -105,15 +124,16 @@ private data class CopyLabels(
 private fun DetailSheetContent(
     address: Address,
     coordinatePhase: CoordinatePhase,
+    lastCopied: CopyField?,
     onRetry: () -> Unit,
-    onCopy: (String, String) -> Unit,
+    onCopy: (CopyField, String, String) -> Unit,
     labels: CopyLabels,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth().padding(bottom = ZipkrSpacing.md),
         verticalArrangement = Arrangement.spacedBy(ZipkrSpacing.sm),
     ) {
-        DetailHeader(address)
+        DetailHeader(address = address, lastCopied = lastCopied)
         MapArea(phase = coordinatePhase, onRetry = onRetry)
         MapDeepLinkButtons(
             coord = (coordinatePhase as? CoordinatePhase.Success)?.coordinate,
@@ -121,10 +141,10 @@ private fun DetailSheetContent(
             modifier = Modifier.padding(horizontal = ZipkrSpacing.md),
         )
         CopyBar(
-            onCopyZip = { onCopy(labels.zip, address.zipCode) },
-            onCopyRoad = { onCopy(labels.road, address.roadAddress) },
-            onCopyJibun = { onCopy(labels.jibun, address.jibunAddress) },
-            onCopyEnglish = { onCopy(labels.english, address.englishAddress) },
+            onCopyZip = { onCopy(CopyField.Zip, labels.zip, address.zipCode) },
+            onCopyRoad = { onCopy(CopyField.Road, labels.road, address.roadAddress) },
+            onCopyJibun = { onCopy(CopyField.Jibun, labels.jibun, address.jibunAddress) },
+            onCopyEnglish = { onCopy(CopyField.English, labels.english, address.englishAddress) },
         )
     }
 }
