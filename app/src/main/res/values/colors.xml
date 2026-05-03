@@ -1,12 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
-    <!-- Splash Screen API 배경 — 다크 네이비. ZipkrTheme의 SurfaceDark과 같은 톤이다. -->
-    <color name="splash_background">#0A0F1F</color>
+    <!-- Splash Screen API 배경 (라이트 모드). values-night의 다크 버전과 자동 전환된다. -->
+    <color name="splash_background">#FFFFFF</color>
+
+    <!-- 적응형 launcher 아이콘 배경 (라이트 모드). -->
+    <color name="ic_launcher_background">#FFFFFF</color>
 </resources>
