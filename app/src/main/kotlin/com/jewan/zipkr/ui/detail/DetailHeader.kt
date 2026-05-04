@@ -16,16 +16,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jewan.zipkr.data.Address
 import com.jewan.zipkr.ui.components.CopyField
+import com.jewan.zipkr.ui.theme.ZipkrMono
 import com.jewan.zipkr.ui.theme.ZipkrSpacing
 
-private val ZIP_JUMBO_SIZE = 32.sp
+private val ZIP_JUMBO_SIZE = 36.sp
+private val ZIP_JUMBO_TRACKING = 2.sp
 private val LABEL_BODY_SIZE = 13.sp
 private val SUBTLE_BODY_SIZE = 12.sp
 private const val HIGHLIGHT_TRANSITION_MS = 220
@@ -83,8 +84,9 @@ private fun DetailHeaderBody(
         Text(
             text = address.zipCode,
             fontSize = ZIP_JUMBO_SIZE,
-            fontFamily = FontFamily.Monospace,
-            fontWeight = if (zipHighlighted) FontWeight.ExtraBold else FontWeight.SemiBold,
+            fontFamily = ZipkrMono,
+            fontWeight = if (zipHighlighted) FontWeight.ExtraBold else FontWeight.Bold,
+            letterSpacing = ZIP_JUMBO_TRACKING,
             color = brand,
         )
     }

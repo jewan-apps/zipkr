@@ -35,6 +35,28 @@ private val Pretendard =
         pretendardFont(FontWeight.Bold, 700),
     )
 
+/**
+ * JetBrains Mono 가변 폰트.
+ * 우편번호·번지 등 숫자/영문 도메인 텍스트를 fixed-width로 잡아 "우체국 인쇄물"의 정형성을 시각화한다.
+ * Pretendard(한글)와 대비되어 zipkr 시그니처 톤을 만든다.
+ */
+private fun monoFont(
+    weight: FontWeight,
+    axisValue: Int,
+) = Font(
+    R.font.jetbrains_mono,
+    weight = weight,
+    variationSettings = FontVariation.Settings(FontVariation.weight(axisValue)),
+)
+
+internal val ZipkrMono =
+    FontFamily(
+        monoFont(FontWeight.Normal, 400),
+        monoFont(FontWeight.Medium, 500),
+        monoFont(FontWeight.Bold, 700),
+        monoFont(FontWeight.ExtraBold, 800),
+    )
+
 private fun pretendardStyle(
     weight: FontWeight,
     sizeSp: Int,
