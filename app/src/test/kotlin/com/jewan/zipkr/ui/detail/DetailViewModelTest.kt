@@ -5,8 +5,11 @@ import com.jewan.zipkr.data.AppError
 import com.jewan.zipkr.data.Coordinate
 import com.jewan.zipkr.data.CoordinateRepository
 import com.jewan.zipkr.data.Result
+import com.jewan.zipkr.data.SearchHistoryRepository
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -20,12 +23,17 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class DetailViewModelTest {
     private val repo: CoordinateRepository = mockk()
+    private val historyRepo: SearchHistoryRepository =
+        mockk(relaxed = true) {
+            every { observeFavorites() } returns flowOf(emptyList())
+            every { observeRecent() } returns flowOf(emptyList())
+        }
     private lateinit var viewModel: DetailViewModel
 
     @Before
     fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
-        viewModel = DetailViewModel(repo)
+        viewModel = DetailViewModel(repo, historyRepo)
     }
 
     @After

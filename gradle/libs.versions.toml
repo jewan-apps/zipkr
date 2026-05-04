@@ -19,6 +19,9 @@ hilt-navigation-compose = "1.2.0"
 # Hilt
 hilt = "2.51.1"
 
+# Persistence
+datastore = "1.1.1"
+
 # Network
 retrofit = "2.11.0"
 okhttp = "4.12.0"
@@ -75,6 +78,9 @@ hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", ve
 # Hilt
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }
+
+# Persistence — DataStore Preferences
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 
 # Network
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }

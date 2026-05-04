@@ -2,20 +2,24 @@ package com.jewan.zipkr.ui.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jewan.zipkr.data.Address
 import com.jewan.zipkr.data.AddressPage
 import com.jewan.zipkr.data.AddressRepository
 import com.jewan.zipkr.data.Result
+import com.jewan.zipkr.data.SearchHistoryRepository
 import com.jewan.zipkr.data.Sido
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -31,9 +35,24 @@ class SearchViewModel
     @Inject
     constructor(
         private val repository: AddressRepository,
+        private val historyRepository: SearchHistoryRepository,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(SearchUiState())
         val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
+
+        /**
+         * EmptyState 영역에서 노출되는 즐겨찾기·최근 칩 행이다.
+         * stateIn으로 hot stream화해 Composable이 중복 collect해도 1번만 dataStore를 읽는다.
+         */
+        val favorites: StateFlow<List<Address>> =
+            historyRepository
+                .observeFavorites()
+                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), emptyList())
+
+        val recent: StateFlow<List<Address>> =
+            historyRepository
+                .observeRecent()
+                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), emptyList())
 
         private val queryFlow = MutableStateFlow("")
         private var inFlight: Job? = null
@@ -212,5 +231,8 @@ class SearchViewModel
             // 5자리 숫자 입력은 우편번호 역검색 시도로 판단해 별도 Phase로 전환한다.
             // String.matches(Regex)는 full-match라 앵커 불필요.
             val POSTAL_CODE_PATTERN = Regex("""\d{5}""")
+
+            // WhileSubscribed의 stop timeout — 화면 회전 등 짧은 unsubscribe 시 dataStore 재구독 비용을 회피한다.
+            const val STOP_TIMEOUT_MS = 5_000L
         }
     }

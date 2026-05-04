@@ -165,8 +165,9 @@ private fun CardBody(
             )
         }
         HighlightableLine(highlighted = lastCopied == CopyField.English, brand = brand) {
+            // 영어 검색은 아직 지원하지 않으므로(행안부 API가 한글 매칭 전용) 영어 주소엔 highlight를 적용하지 않는다.
             Text(
-                text = highlightQuery(address.englishAddress, query, highlightStyle),
+                text = address.englishAddress,
                 style = MaterialTheme.typography.bodySmall,
                 fontStyle = FontStyle.Italic,
                 color = englishColor,

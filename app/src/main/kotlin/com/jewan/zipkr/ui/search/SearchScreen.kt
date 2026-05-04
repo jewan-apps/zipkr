@@ -38,6 +38,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -49,6 +50,7 @@ import com.jewan.zipkr.data.Address
 import com.jewan.zipkr.data.AppError
 import com.jewan.zipkr.ui.components.EmptyState
 import com.jewan.zipkr.ui.components.ErrorView
+import com.jewan.zipkr.ui.components.HistoryFavoritesPanel
 import com.jewan.zipkr.ui.components.SidoAnchor
 import com.jewan.zipkr.ui.components.SidoSelectorSheet
 import com.jewan.zipkr.ui.detail.DetailSheet
@@ -58,6 +60,21 @@ import com.jewan.zipkr.util.lightHaptic
 
 // SidoAnchor.ANCHOR_RADIUS와 동일한 값. 두 컴포넌트가 한 줄에서 같은 코너 곡률을 공유한다.
 private val SEARCH_BAR_RADIUS = 14.dp
+
+/**
+ * 진입 즉시 입력창에 포커스 + 키보드 노출을 자동 트리거하는 hook.
+ * focus는 OutlinedTextField에 connect용으로, keyboard는 카드 탭/시트 열기 등 hide 용으로 호출자가 함께 사용한다.
+ */
+@Composable
+private fun rememberAutoFocusKeyboard(): Pair<FocusRequester, SoftwareKeyboardController?> {
+    val keyboard = LocalSoftwareKeyboardController.current
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) {
+        focus.requestFocus()
+        keyboard?.show()
+    }
+    return focus to keyboard
+}
 
 /**
  * 검색 메인 화면이다.
@@ -70,16 +87,12 @@ private val SEARCH_BAR_RADIUS = 14.dp
 @Composable
 fun SearchScreen(viewModel: SearchViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val favorites by viewModel.favorites.collectAsStateWithLifecycle()
+    val recent by viewModel.recent.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val view = LocalView.current
-    val keyboard = LocalSoftwareKeyboardController.current
-    val focus = remember { FocusRequester() }
+    val (focus, keyboard) = rememberAutoFocusKeyboard()
     val copyToastTemplate = stringResource(R.string.copy_toast)
-
-    LaunchedEffect(Unit) {
-        focus.requestFocus()
-        keyboard?.show()
-    }
 
     // 시트 열림 상태는 순수 UI라 ViewModel이 아닌 화면 내 saveable로 관리한다 (Address는 @Parcelize).
     var sheetOpen by rememberSaveable { mutableStateOf(false) }
@@ -105,24 +118,60 @@ fun SearchScreen(viewModel: SearchViewModel = hiltViewModel()) {
     Scaffold(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }) },
     ) { padding ->
-        SearchScreenContent(state = state, focus = focus, callbacks = callbacks, contentPadding = padding)
+        SearchScreenContent(
+            state = state,
+            favorites = favorites,
+            recent = recent,
+            focus = focus,
+            callbacks = callbacks,
+            contentPadding = padding,
+        )
     }
 
+    SearchOverlays(
+        state = state,
+        sheetOpen = sheetOpen,
+        detailAddress = detailSheetAddress,
+        onSidoSelect = viewModel::onSidoChange,
+        onSidoDismiss = { sheetOpen = false },
+        onDetailDismiss = { detailSheetAddress = null },
+    )
+}
+
+/**
+ * 시·도 선택 시트와 상세 시트 두 모달을 묶은 overlay layer이다.
+ * SearchScreen 본체 길이를 50 lines 이내로 유지하기 위해 분리했다.
+ */
+@Composable
+private fun SearchOverlays(
+    state: SearchUiState,
+    sheetOpen: Boolean,
+    detailAddress: Address?,
+    onSidoSelect: (com.jewan.zipkr.data.Sido?) -> Unit,
+    onSidoDismiss: () -> Unit,
+    onDetailDismiss: () -> Unit,
+) {
     if (sheetOpen) {
         SidoSelectorSheet(
             selected = state.selectedSido,
-            onSelect = viewModel::onSidoChange,
-            onDismiss = { sheetOpen = false },
+            onSelect = onSidoSelect,
+            onDismiss = onSidoDismiss,
         )
     }
-    detailSheetAddress?.let { addr ->
-        DetailSheet(address = addr, onDismiss = { detailSheetAddress = null })
+    detailAddress?.let { addr ->
+        DetailSheet(
+            address = addr,
+            onDismiss = onDetailDismiss,
+            query = state.query,
+        )
     }
 }
 
 @Composable
 private fun SearchScreenContent(
     state: SearchUiState,
+    favorites: List<Address>,
+    recent: List<Address>,
     focus: FocusRequester,
     callbacks: SearchCallbacks,
     contentPadding: PaddingValues,
@@ -148,7 +197,13 @@ private fun SearchScreenContent(
         // SearchBody가 fillMaxSize인 EmptyState 등을 가질 수 있어 weight(1f)로 영역 보장한다.
         // 그래야 마지막 자식 AdBanner가 바닥에 고정되어 그려진다.
         Box(modifier = Modifier.weight(1f)) {
-            SearchBody(phase = state.phase, query = state.query, callbacks = callbacks)
+            SearchBody(
+                phase = state.phase,
+                query = state.query,
+                favorites = favorites,
+                recent = recent,
+                callbacks = callbacks,
+            )
         }
         AdBanner()
     }
@@ -265,14 +320,25 @@ private data class SearchCallbacks(
 private fun SearchBody(
     phase: SearchUiState.Phase,
     query: String,
+    favorites: List<Address>,
+    recent: List<Address>,
     callbacks: SearchCallbacks,
 ) {
     when (phase) {
         SearchUiState.Phase.Idle ->
-            EmptyState(
-                title = stringResource(R.string.empty_title),
-                description = stringResource(R.string.empty_description),
-            )
+            // 즐겨찾기/최근이 하나라도 있으면 칩 행 패널, 둘 다 비면 기본 EmptyState (첫 사용자는 변화 못 느낌).
+            if (favorites.isNotEmpty() || recent.isNotEmpty()) {
+                HistoryFavoritesPanel(
+                    favorites = favorites,
+                    recent = recent,
+                    onAddressClick = callbacks.onCardClick,
+                )
+            } else {
+                EmptyState(
+                    title = stringResource(R.string.empty_title),
+                    description = stringResource(R.string.empty_description),
+                )
+            }
         SearchUiState.Phase.Loading ->
             // 매 입력마다 큰 스켈레톤 카드가 깜빡이면 노이즈가 된다. 작은 스피너로 대체한다.
             Column(
