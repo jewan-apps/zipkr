@@ -61,6 +61,10 @@ import com.jewan.zipkr.util.lightHaptic
 // SidoAnchor.ANCHOR_RADIUS와 동일한 값. 두 컴포넌트가 한 줄에서 같은 코너 곡률을 공유한다.
 private val SEARCH_BAR_RADIUS = 14.dp
 
+// 5자리 숫자(우편번호) 검색 분기용 — 빈 결과 메시지를 우편번호 톤으로 바꾸기 위해 사용한다.
+// ViewModel의 POSTAL_CODE_PATTERN과 의미가 같으나 화면 레이어 책임 분리를 위해 별도로 둔다.
+private val ZIP_QUERY_PATTERN = Regex("""\d{5}""")
+
 /**
  * 진입 즉시 입력창에 포커스 + 키보드 노출을 자동 트리거하는 hook.
  * focus는 OutlinedTextField에 connect용으로, keyboard는 카드 탭/시트 열기 등 hide 용으로 호출자가 함께 사용한다.
@@ -242,6 +246,21 @@ private fun rememberSearchCallbacks(
     }
 
 /**
+ * 빈 결과 패널이다. 우편번호(5자리 숫자) 검색이면 "해당 우편번호의 주소가 없어요"로 분기해
+ * 사용자 의도에 맞는 메시지를 노출한다.
+ */
+@Composable
+private fun EmptyResultPanel(query: String) {
+    val isZipQuery = query.matches(ZIP_QUERY_PATTERN)
+    val titleRes = if (isZipQuery) R.string.empty_zip_results_title else R.string.empty_results_title
+    val descRes = if (isZipQuery) R.string.empty_zip_results_description else R.string.empty_results_description
+    EmptyState(
+        title = stringResource(titleRes),
+        description = stringResource(descRes),
+    )
+}
+
+/**
  * AppError type을 strings.xml 리소스 키로 매핑한다.
  * ViewModel은 type만 보내고, 본 함수에서 사용자 가시 문자열을 결정해 i18n 시 strings-en.xml 추가만으로 EN 대응이 끝난다.
  */
@@ -347,16 +366,7 @@ private fun SearchBody(
             ) {
                 CircularProgressIndicator(modifier = Modifier.size(32.dp))
             }
-        SearchUiState.Phase.Empty ->
-            EmptyState(
-                title = stringResource(R.string.empty_results_title),
-                description = stringResource(R.string.empty_results_description),
-            )
-        SearchUiState.Phase.PostalCodeUnsupported ->
-            EmptyState(
-                title = stringResource(R.string.postal_code_unsupported_title),
-                description = stringResource(R.string.postal_code_unsupported_description),
-            )
+        SearchUiState.Phase.Empty -> EmptyResultPanel(query = query)
         is SearchUiState.Phase.Error ->
             ErrorView(
                 message = stringResource(errorMessageRes(phase.error)),

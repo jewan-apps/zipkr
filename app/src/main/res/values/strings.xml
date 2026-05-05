@@ -36,9 +36,9 @@
     <string name="error_numeric_only">숫자만으로는 검색할 수 없어요</string>
     <string name="error_invalid_query">사용할 수 없는 문자가 포함됐어요</string>
 
-    <!-- 우편번호 역검색 미지원 안내이다. -->
-    <string name="postal_code_unsupported_title">우편번호 검색은 지원하지 않아요</string>
-    <string name="postal_code_unsupported_description">도로명·지번·건물명으로 검색해주세요</string>
+    <!-- 우편번호 역검색 빈 결과 — 5자리 숫자가 입력됐지만 행안부 DB에 매칭되는 주소가 없을 때이다. -->
+    <string name="empty_zip_results_title">해당 우편번호의 주소가 없어요</string>
+    <string name="empty_zip_results_description">우편번호 5자리를 다시 확인해주세요.</string>
 
     <!-- 상세 화면 — 외부 지도 앱 진입 + 카카오맵 임베드 상태 -->
     <string name="map_open_kakao">카카오맵</string>

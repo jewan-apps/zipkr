@@ -173,13 +173,6 @@ class SearchViewModel
                 _uiState.value = _uiState.value.copy(phase = SearchUiState.Phase.Idle)
                 return
             }
-            // 5자리 숫자 입력은 우편번호 역검색 시도로 판단해 API 호출 없이 안내 Phase로 전환한다.
-            // 시·도 prefix 합성 전에 판정해야 사용자가 입력한 5자리 숫자만 정확히 잡힌다.
-            if (query.matches(POSTAL_CODE_PATTERN)) {
-                lastTriggeredQuery = query
-                _uiState.value = _uiState.value.copy(phase = SearchUiState.Phase.PostalCodeUnsupported)
-                return
-            }
             // effective query를 trigger 키로 쓰면 sido 변경만으로도 같은 base query에 대해 새 호출이 트리거된다.
             val effective = effectiveQuery(query, _uiState.value.selectedSido)
             lastTriggeredQuery = effective
@@ -194,12 +187,18 @@ class SearchViewModel
         /**
          * 사용자 입력 query 앞에 시·도 prefix를 붙인 effective query를 반환한다.
          * sido가 null("전체")이면 query 그대로 반환한다.
+         * 5자리 숫자(우편번호)는 그 자체로 지역을 포함하므로 sido prefix를 합성하면 빈 결과가 되기에 무시한다.
          * Repository·캐싱·페이징은 본 effective query를 단일 키로 사용한다.
          */
         private fun effectiveQuery(
             query: String,
             sido: Sido?,
-        ): String = if (sido == null) query else "${sido.apiPrefix} $query"
+        ): String =
+            when {
+                sido == null -> query
+                query.matches(POSTAL_CODE_PATTERN) -> query
+                else -> "${sido.apiPrefix} $query"
+            }
 
         /** 첫 page(runSearch) 결과를 매핑한다. accumulated 없이 단순 변환만 한다. */
         private fun mapFirstPage(result: Result<AddressPage>): SearchUiState.Phase =
@@ -228,7 +227,8 @@ class SearchViewModel
             // 행안부 API 최대 countPerPage는 100이다. 50으로 설정해 네트워크·처리 부담을 줄인다.
             const val PAGE_SIZE = 50
 
-            // 5자리 숫자 입력은 우편번호 역검색 시도로 판단해 별도 Phase로 전환한다.
+            // 5자리 숫자(우편번호) 입력은 행안부 API가 native 지원하므로 그대로 keyword로 보낸다.
+            // 단 sido prefix 합성 시점에 매칭해 prefix 추가를 건너뛴다 ("서울특별시 06236"은 빈 결과).
             // String.matches(Regex)는 full-match라 앵커 불필요.
             val POSTAL_CODE_PATTERN = Regex("""\d{5}""")
 
