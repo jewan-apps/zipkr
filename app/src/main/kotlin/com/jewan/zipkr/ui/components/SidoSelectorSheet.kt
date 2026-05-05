@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jewan.zipkr.R
@@ -43,7 +44,9 @@ private const val GRID_COLUMNS = 4
 private val CHIP_HEIGHT = 44.dp
 private val CHIP_RADIUS = 12.dp
 private val CHIP_BORDER = 1.dp
-private val CHIP_LABEL_SIZE = 14.sp
+// 4 column grid에서 영문 라벨(Gyeongbuk 등 9자)도 한 줄에 안전하게 들어가도록 12sp로 통일했다.
+// 한글(2자)에선 살짝 작아 보이지만 calmer 톤에 맞고, 영문에선 칩 안에 깔끔히 들어간다.
+private val CHIP_LABEL_SIZE = 12.sp
 private val TITLE_SIZE = 16.sp
 private val RESET_LABEL_SIZE = 13.sp
 
@@ -145,7 +148,7 @@ private fun SheetGrid(
     ) {
         items(items = Sido.ORDERED, key = { it.name }) { sido ->
             SidoCellChip(
-                label = sido.displayName,
+                label = sido.label(),
                 isActive = selected == sido,
                 onClick = { onSelect(sido) },
             )
@@ -168,12 +171,19 @@ private fun SidoCellChip(
         border = palette.border,
         modifier = Modifier.height(CHIP_HEIGHT),
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth()) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = ZipkrSpacing.xs),
+        ) {
             Text(
                 text = label,
                 fontSize = CHIP_LABEL_SIZE,
                 fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Medium,
                 color = palette.content,
+                // 영문 라벨이 한글(2자)보다 4~5배 길어 칩 너비를 초과하는 경우가 있어 1줄 강제 + 잘리면 ellipsis로 fallback.
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }

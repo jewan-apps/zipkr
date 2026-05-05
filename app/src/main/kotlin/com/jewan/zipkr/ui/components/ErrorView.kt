@@ -10,8 +10,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import com.jewan.zipkr.R
 import com.jewan.zipkr.ui.theme.ZipkrSpacing
 import com.jewan.zipkr.ui.theme.ZipkrTheme
 
@@ -19,14 +21,13 @@ import com.jewan.zipkr.ui.theme.ZipkrTheme
  * API 호출 실패·네트워크 오류 등 사용자에게 재시도를 권할 때 노출한다.
  * 사용자 친화 메시지만 표시하고, 내부 예외 원문은 노출하지 않는다 (헌법 §1.9).
  *
- * retryLabel은 호출부에서 stringResource로 주입하기 위해 파라미터화한다.
- * Phase 5 i18n에서 컴포넌트 본체 변경 없이 KO/EN 레이블이 교체된다.
+ * retryLabel은 default로 stringResource를 사용해 i18n 자동 분기한다 (Compose default 파라미터에서 @Composable 호출 가능).
  */
 @Composable
 fun ErrorView(
     message: String,
     onRetry: () -> Unit,
-    retryLabel: String = "다시 시도",
+    retryLabel: String = stringResource(R.string.action_retry),
     modifier: Modifier = Modifier,
 ) {
     Column(

@@ -66,7 +66,7 @@ fun SidoAnchor(
             modifier = Modifier.padding(horizontal = ANCHOR_HPAD),
         ) {
             Text(
-                text = selected?.displayName ?: stringResource(R.string.sido_anchor_default),
+                text = selected?.label() ?: stringResource(R.string.sido_anchor_default),
                 fontSize = ANCHOR_LABEL_SIZE,
                 fontWeight = FontWeight.SemiBold,
                 color = content,
