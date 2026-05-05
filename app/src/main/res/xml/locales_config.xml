@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  앱별 언어 설정(Per-app language preferences, Android 13+)에서 zipkr를 노출시키기 위한 selector이다.
+  이 파일이 없으면 OS의 "설정 → 앱 언어" 목록에서 zipkr가 제외돼 사용자가 시스템 언어 변경 없이는 영문으로 못 본다.
+-->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="ko"/>
+    <locale android:name="en"/>
+</locale-config>
