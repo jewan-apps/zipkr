@@ -125,49 +125,55 @@ class SearchViewModelTest {
         }
 
     @Test
-    fun `5자리 숫자 입력 시 PostalCodeUnsupported가 되고 API 호출이 없다`() =
+    fun `5자리 숫자 입력 시 우편번호 그대로 keyword로 보내고 결과를 노출한다`() =
         runTest {
-            // 우편번호 패턴 입력 — repository.search가 호출되지 않아야 한다.
+            // 행안부 API는 5자리 우편번호를 native 지원한다. ViewModel은 sido prefix 합성 없이 그대로 전달해야 한다.
+            val zipResult = listOf(testAddress("11823", "도로명우편번호", "지번우편번호", "EngZip"))
+            coEvery { repository.search("11823", 1, 50) } returns
+                Result.Success(AddressPage(items = zipResult, currentPage = 1, totalCount = 1))
+
             viewModel.onQueryChange("11823")
             viewModel.searchNow()
 
             viewModel.uiState.test {
-                val phase = awaitItem().phase
-                assertThat(phase).isEqualTo(SearchUiState.Phase.PostalCodeUnsupported)
+                val phase = awaitItem().phase as SearchUiState.Phase.Success
+                assertThat(phase.results).isEqualTo(zipResult)
             }
-            // API 호출이 없었음을 검증한다.
-            coVerify(exactly = 0) { repository.search(any(), any(), any()) }
+            coVerify(exactly = 1) { repository.search("11823", 1, 50) }
         }
 
     @Test
-    fun `4자리 숫자 입력은 우편번호 가드에 걸리지 않는다`() =
+    fun `5자리 숫자 입력 시 sido가 선택돼있어도 prefix 합성 없이 그대로 보낸다`() =
         runTest {
+            // "서울특별시 06236"은 빈 결과가 되므로 우편번호일 땐 sido 무시 (의미상 우편번호 자체가 지역 포함).
+            val zipResult = listOf(testAddress("06236", "강남구 도로명", "역삼동 지번", "EngZip"))
+            coEvery { repository.search("06236", 1, 50) } returns
+                Result.Success(AddressPage(items = zipResult, currentPage = 1, totalCount = 1))
+
+            viewModel.onSidoChange(Sido.SEOUL)
+            viewModel.onQueryChange("06236")
+            viewModel.searchNow()
+
+            viewModel.uiState.test {
+                val phase = awaitItem().phase as SearchUiState.Phase.Success
+                assertThat(phase.results).isEqualTo(zipResult)
+            }
+            // sido prefix가 합성되지 않은 raw 우편번호로만 호출됐음을 검증한다.
+            coVerify(exactly = 1) { repository.search("06236", 1, 50) }
+            coVerify(exactly = 0) { repository.search(match { it.contains("서울특별시") }, any(), any()) }
+        }
+
+    @Test
+    fun `4자리 숫자 입력은 일반 검색 흐름으로 들어간다`() =
+        runTest {
+            // 5자리만 우편번호로 간주한다 — 4자리는 일반 keyword로 그대로 호출된다.
             coEvery { repository.search("1234", any(), any()) } returns
                 Result.Success(AddressPage(items = emptyList(), currentPage = 1, totalCount = 0))
 
             viewModel.onQueryChange("1234")
             viewModel.searchNow()
 
-            viewModel.uiState.test {
-                val phase = awaitItem().phase
-                // 5자리 숫자만 우편번호로 간주한다 — 4자리는 일반 검색 흐름.
-                assertThat(phase).isNotEqualTo(SearchUiState.Phase.PostalCodeUnsupported)
-            }
-        }
-
-    @Test
-    fun `숫자와 문자 혼합 입력은 우편번호 가드에 걸리지 않는다`() =
-        runTest {
-            coEvery { repository.search("1234a", any(), any()) } returns
-                Result.Success(AddressPage(items = emptyList(), currentPage = 1, totalCount = 0))
-
-            viewModel.onQueryChange("1234a")
-            viewModel.searchNow()
-
-            viewModel.uiState.test {
-                val phase = awaitItem().phase
-                assertThat(phase).isNotEqualTo(SearchUiState.Phase.PostalCodeUnsupported)
-            }
+            coVerify(exactly = 1) { repository.search("1234", any(), any()) }
         }
 
     @Test
