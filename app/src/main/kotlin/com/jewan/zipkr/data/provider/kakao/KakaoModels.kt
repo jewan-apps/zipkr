@@ -1,6 +1,7 @@
 package com.jewan.zipkr.data.provider.kakao
 
 import com.jewan.zipkr.data.Coordinate
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
@@ -23,3 +24,20 @@ data class KakaoDocument(
      */
     fun toCoordinate(): Coordinate = Coordinate(longitude = x.toDouble(), latitude = y.toDouble())
 }
+
+/**
+ * Kakao keyword search 응답 DTO이다.
+ * 외국인의 영문 POI 검색을 한글 도로명주소로 매핑하기 위해 road_address_name만 활용한다.
+ * place_name·address_name 등 다른 풍부한 필드는 ignoreUnknownKeys로 무시된다.
+ */
+@Serializable
+data class KakaoKeywordResponse(
+    val documents: List<KakaoPlace> = emptyList(),
+)
+
+@Serializable
+data class KakaoPlace(
+    @SerialName("place_name") val placeName: String = "",
+    @SerialName("road_address_name") val roadAddressName: String = "",
+    @SerialName("address_name") val addressName: String = "",
+)

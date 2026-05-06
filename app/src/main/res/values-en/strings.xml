@@ -1,10 +1,10 @@
 <resources>
     <string name="app_name">ZipKR</string>
-    <string name="search_placeholder">Enter a Korean address</string>
+    <string name="search_placeholder">Search in Korean or English</string>
     <string name="empty_title">Find any Korean zip code</string>
-    <string name="empty_description">Road names, lot numbers, and building names all work.</string>
+    <string name="empty_description">In English, try a building, station, or landmark (e.g. "Gangnam Station").</string>
     <string name="empty_results_title">No results found</string>
-    <string name="empty_results_description">Try a different keyword.</string>
+    <string name="empty_results_description">Try a building, station, or landmark name.</string>
     <string name="copy_toast">%1$s copied</string>
     <string name="copy_zip_label">Zip code</string>
     <string name="copy_zip_short">Zip</string>

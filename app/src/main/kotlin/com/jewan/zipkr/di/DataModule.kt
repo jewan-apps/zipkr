@@ -8,18 +8,32 @@ import com.jewan.zipkr.data.DataStoreSearchHistoryRepository
 import com.jewan.zipkr.data.SearchHistoryRepository
 import com.jewan.zipkr.data.provider.AddressProvider
 import com.jewan.zipkr.data.provider.juso.JusoApiProvider
+import com.jewan.zipkr.data.provider.kakao.KakaoLocalProvider
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class DataModule {
+    /**
+     * 한글 입력 흐름의 AddressProvider — 행안부 도로명주소 API 단독.
+     */
     @Binds
     @Singleton
-    abstract fun bindAddressProvider(impl: JusoApiProvider): AddressProvider
+    @Named(DiQualifiers.KOREAN_PROVIDER)
+    abstract fun bindKoreanAddressProvider(impl: JusoApiProvider): AddressProvider
+
+    /**
+     * 영문 입력 흐름의 AddressProvider — Kakao keyword API → 행안부 도로명주소 chain.
+     */
+    @Binds
+    @Singleton
+    @Named(DiQualifiers.ENGLISH_PROVIDER)
+    abstract fun bindEnglishAddressProvider(impl: KakaoLocalProvider): AddressProvider
 
     @Binds
     @Singleton
