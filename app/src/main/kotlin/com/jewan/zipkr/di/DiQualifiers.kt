@@ -10,4 +10,9 @@ object DiQualifiers {
     const val KAKAO_REST_API_KEY = "kakao_rest_api_key"
     const val JUSO_OKHTTP = "juso_okhttp"
     const val KAKAO_OKHTTP = "kakao_okhttp"
+
+    // 한·영 입력에 따라 분기되는 AddressProvider 추상화 식별자.
+    // KOREAN_PROVIDER → JusoApiProvider (행안부 단독), ENGLISH_PROVIDER → KakaoLocalProvider (Kakao keyword + 행안부 chain).
+    const val KOREAN_PROVIDER = "korean_provider"
+    const val ENGLISH_PROVIDER = "english_provider"
 }
