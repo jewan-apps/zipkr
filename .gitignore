@@ -29,3 +29,6 @@ keystore.properties
 # === macOS ===
 .DS_Store
 .superpowers/
+
+# === Local release prep (스토어 출시 준비물, 로컬 보관) ===
+docs/release/
