@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Splash Screen API 배경 (라이트 모드). values-night의 다크 버전과 자동 전환된다. -->
+    <color name="splash_background">#FFFFFF</color>
+
+    <!-- 적응형 launcher 아이콘 배경 (라이트 모드). -->
+    <color name="ic_launcher_background">#FFFFFF</color>
+</resources>

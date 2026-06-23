@@ -1,0 +1,76 @@
+<resources>
+    <string name="app_name">우편번호</string>
+    <string name="search_placeholder">주소를 입력하세요</string>
+    <string name="empty_title">어떤 주소든 입력해보세요</string>
+    <string name="empty_description">도로명·지번·건물명 모두 검색됩니다.</string>
+    <string name="empty_results_title">검색 결과가 없어요</string>
+    <string name="empty_results_description">다른 검색어로 시도해보세요.</string>
+    <string name="copy_toast">%1$s 복사됨</string>
+    <string name="copy_zip_label">우편번호</string>
+    <string name="copy_zip_short">우편번호</string>
+    <string name="copy_road_label">도로명 주소</string>
+    <string name="copy_road_short">도로명주소</string>
+    <string name="copy_jibun_label">지번 주소</string>
+    <string name="copy_jibun_short">지번주소</string>
+    <string name="copy_english_label">영문 주소</string>
+    <string name="copy_english_short">영문주소</string>
+    <string name="clear_query_action">검색어 지우기</string>
+
+    <!-- 시·도 필터 — 앵커 + 바텀시트 패턴 -->
+    <string name="sido_anchor_default">전국</string>
+    <string name="sido_anchor_action">지역 선택</string>
+    <string name="sido_sheet_title">지역 선택</string>
+    <string name="sido_sheet_reset">↻ 초기화</string>
+    <string name="load_more_retry">불러오기 실패. 다시 시도</string>
+
+    <!-- 에러 메시지: ViewModel은 AppError type만 보내고, Composable이 본 키로 매핑한다.
+         사용자에게는 "왜"보다 "무엇을 해야 하는지" 한 줄로만 전달한다 (간결성 우선). -->
+    <string name="error_network">인터넷 연결을 확인해주세요</string>
+    <string name="error_api">잠시 후 다시 시도해주세요</string>
+    <string name="error_unknown">잠시 후 다시 시도해주세요</string>
+    <string name="error_auth">잠시 후 다시 시도해주세요</string>
+    <string name="error_path">잠시 후 다시 시도해주세요</string>
+    <string name="error_empty_query">검색어를 입력해주세요</string>
+    <string name="error_query_too_broad">검색량이 너무 많아요. 더 자세히 입력해주세요</string>
+    <string name="error_query_too_short">더 길게 입력해주세요</string>
+    <string name="error_numeric_only">숫자만으로는 검색할 수 없어요</string>
+    <string name="error_invalid_query">사용할 수 없는 문자가 포함됐어요</string>
+
+    <!-- 우편번호 역검색 빈 결과 — 5자리 숫자가 입력됐지만 행안부 DB에 매칭되는 주소가 없을 때이다. -->
+    <string name="empty_zip_results_title">해당 우편번호의 주소가 없어요</string>
+    <string name="empty_zip_results_description">우편번호 5자리를 다시 확인해주세요.</string>
+
+    <!-- 상세 화면 — 외부 지도 앱 진입 + 카카오맵 임베드 상태 -->
+    <string name="map_open_kakao">카카오맵</string>
+    <string name="map_open_naver">네이버지도</string>
+    <string name="map_load_failed">지도를 불러올 수 없어요</string>
+    <string name="map_load_retry">다시 시도</string>
+
+    <!-- v1.1k 히스토리·즐겨찾기 -->
+    <string name="favorite_add">즐겨찾기에 추가</string>
+    <string name="favorite_remove">즐겨찾기에서 제거</string>
+    <string name="favorites_section_title">즐겨찾기</string>
+    <string name="recent_section_title">최근 본 주소</string>
+
+    <!-- 공통 액션 — 다양한 화면에서 재사용한다. -->
+    <string name="action_retry">다시 시도</string>
+
+    <!-- 시·도 displayName — UI 칩·앵커 라벨용 짧은 이름. apiPrefix(행안부 정식 명칭)는 i18n 대상이 아니다. -->
+    <string name="sido_seoul">서울</string>
+    <string name="sido_gyeonggi">경기</string>
+    <string name="sido_incheon">인천</string>
+    <string name="sido_busan">부산</string>
+    <string name="sido_daegu">대구</string>
+    <string name="sido_gwangju">광주</string>
+    <string name="sido_daejeon">대전</string>
+    <string name="sido_ulsan">울산</string>
+    <string name="sido_sejong">세종</string>
+    <string name="sido_gangwon">강원</string>
+    <string name="sido_chungbuk">충북</string>
+    <string name="sido_chungnam">충남</string>
+    <string name="sido_jeonbuk">전북</string>
+    <string name="sido_jeonnam">전남</string>
+    <string name="sido_gyeongbuk">경북</string>
+    <string name="sido_gyeongnam">경남</string>
+    <string name="sido_jeju">제주</string>
+</resources>

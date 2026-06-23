@@ -1,0 +1,11 @@
+root = true
+
+[*.kt]
+indent_style = space
+indent_size = 4
+max_line_length = 120
+# ktlint: Composable 함수는 PascalCase 허용 (Jetpack Compose 공식 컨벤션)
+ktlint_function_naming_ignore_when_annotated_with = Composable
+# Compose theme의 표준 파일명(Color.kt/Type.kt/Theme.kt/Shape.kt/Spacing.kt)은
+# 안에 든 단일 object 이름(ZipkrColors 등)과 다른 것이 관행이다.
+ktlint_standard_filename = disabled

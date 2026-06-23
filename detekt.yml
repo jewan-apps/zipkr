@@ -1,0 +1,56 @@
+complexity:
+  LongMethod:
+    active: true
+    threshold: 50
+  LongParameterList:
+    active: true
+    # 헌법 §1.7 "함수 인자 최대 4개" 정신을 위해 threshold = 5로 둔다.
+    # detekt LongParameterList의 functionThreshold semantic은 "이 값 이상 위반"이므로
+    # threshold = 5 = "5+ 파라미터 위반, 4까지 OK" — 헌법과 정확히 일치한다.
+    # (threshold = 4로 두면 4도 위반으로 잡혀 헌법보다 엄격해짐 — 실측 확인됨.)
+    functionThreshold: 5
+    constructorThreshold: 5
+    # Compose 컴포저블은 modifier가 산업 표준 컨텍스트 인자라
+    # "함수 책임이 늘어남"으로 보지 않는다 (헌법 §13.1.1 적용 예외).
+    ignoreAnnotated: ['Composable']
+  TooManyFunctions:
+    active: true
+    thresholdInClasses: 15
+  ComplexCondition:
+    active: true
+    threshold: 4
+  CyclomaticComplexMethod:
+    active: true
+    threshold: 10
+  NestedBlockDepth:
+    active: true
+    threshold: 3
+
+naming:
+  FunctionNaming:
+    active: true
+    ignoreAnnotated: ['Composable']
+  # Compose theme의 표준 파일명(Color.kt/Type.kt/Theme.kt/Shape.kt/Spacing.kt)은
+  # 안에 든 단일 object 이름(ZipkrColors 등)과 다른 것이 관행이다.
+  MatchingDeclarationName:
+    active: false
+
+style:
+  MagicNumber:
+    active: true
+    ignorePropertyDeclaration: true
+    ignoreAnnotation: true
+    ignoreEnums: true
+  MaxLineLength:
+    active: true
+    maxLineLength: 120
+  UnusedPrivateMember:
+    active: true
+    # Compose Preview는 호출자 없이 IDE/스크린샷 도구가 직접 부른다.
+    # multi-preview 어노테이션도 동일하게 취급한다.
+    ignoreAnnotated:
+      - 'Preview'
+      - 'PreviewScreenSizes'
+      - 'PreviewLightDark'
+      - 'PreviewFontScale'
+      - 'PreviewParameter'

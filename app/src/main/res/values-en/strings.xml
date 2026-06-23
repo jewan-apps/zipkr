@@ -1,0 +1,76 @@
+<resources>
+    <string name="app_name">ZipKR</string>
+    <string name="search_placeholder">Search in Korean or English</string>
+    <string name="empty_title">Find any Korean zip code</string>
+    <string name="empty_description">In English, try a building, station, or landmark (e.g. "Gangnam Station").</string>
+    <string name="empty_results_title">No results found</string>
+    <string name="empty_results_description">Try a building, station, or landmark name.</string>
+    <string name="copy_toast">%1$s copied</string>
+    <string name="copy_zip_label">Zip code</string>
+    <string name="copy_zip_short">Zip</string>
+    <string name="copy_road_label">Road address</string>
+    <string name="copy_road_short">Road</string>
+    <string name="copy_jibun_label">Lot address</string>
+    <string name="copy_jibun_short">Lot</string>
+    <string name="copy_english_label">English address</string>
+    <string name="copy_english_short">English</string>
+    <string name="clear_query_action">Clear search</string>
+
+    <!-- Province (시·도) filter — anchor + bottom sheet pattern -->
+    <string name="sido_anchor_default">All Korea</string>
+    <string name="sido_anchor_action">Select region</string>
+    <string name="sido_sheet_title">Select region</string>
+    <string name="sido_sheet_reset">↻ Reset</string>
+    <string name="load_more_retry">Failed to load more. Retry</string>
+
+    <!-- Error messages: ViewModel sends only AppError type, Composable maps to these keys.
+         Tells users "what to do next" rather than "why it failed" (clarity over cause). -->
+    <string name="error_network">Check your internet connection</string>
+    <string name="error_api">Please try again later</string>
+    <string name="error_unknown">Please try again later</string>
+    <string name="error_auth">Please try again later</string>
+    <string name="error_path">Please try again later</string>
+    <string name="error_empty_query">Please enter a search term</string>
+    <string name="error_query_too_broad">Too many results. Please be more specific</string>
+    <string name="error_query_too_short">Please enter a longer keyword</string>
+    <string name="error_numeric_only">Numbers alone cannot be searched</string>
+    <string name="error_invalid_query">Some characters are not allowed</string>
+
+    <!-- Zip code reverse search — 5-digit numeric input matches no address. -->
+    <string name="empty_zip_results_title">No address for this zip code</string>
+    <string name="empty_zip_results_description">Please double-check the 5-digit zip code.</string>
+
+    <!-- Detail screen — external maps + Kakao Map embed -->
+    <string name="map_open_kakao">Kakao Map</string>
+    <string name="map_open_naver">Naver Map</string>
+    <string name="map_load_failed">Map failed to load</string>
+    <string name="map_load_retry">Retry</string>
+
+    <!-- v1.1k history &amp; favorites -->
+    <string name="favorite_add">Add to favorites</string>
+    <string name="favorite_remove">Remove from favorites</string>
+    <string name="favorites_section_title">Favorites</string>
+    <string name="recent_section_title">Recent</string>
+
+    <!-- Common actions — reused across screens. -->
+    <string name="action_retry">Retry</string>
+
+    <!-- Province (시·도) displayName — short label for UI chips/anchor. apiPrefix is internal only, not localized. -->
+    <string name="sido_seoul">Seoul</string>
+    <string name="sido_gyeonggi">Gyeonggi</string>
+    <string name="sido_incheon">Incheon</string>
+    <string name="sido_busan">Busan</string>
+    <string name="sido_daegu">Daegu</string>
+    <string name="sido_gwangju">Gwangju</string>
+    <string name="sido_daejeon">Daejeon</string>
+    <string name="sido_ulsan">Ulsan</string>
+    <string name="sido_sejong">Sejong</string>
+    <string name="sido_gangwon">Gangwon</string>
+    <string name="sido_chungbuk">Chungbuk</string>
+    <string name="sido_chungnam">Chungnam</string>
+    <string name="sido_jeonbuk">Jeonbuk</string>
+    <string name="sido_jeonnam">Jeonnam</string>
+    <string name="sido_gyeongbuk">Gyeongbuk</string>
+    <string name="sido_gyeongnam">Gyeongnam</string>
+    <string name="sido_jeju">Jeju</string>
+</resources>
