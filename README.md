@@ -29,7 +29,7 @@
 | 영역 | 선택 |
 |---|---|
 | 언어/UI | Kotlin · Jetpack Compose (Material 3) |
-| minSdk / target | 24 (Android 7.0) / 34 (Android 14) |
+| minSdk / target | 24 (Android 7.0) / 36 |
 | DI | Hilt |
 | 네트워크 | Retrofit + OkHttp + kotlinx-serialization |
 | 영속 저장 | Jetpack DataStore Preferences |
@@ -91,6 +91,16 @@ admob.banner.unit.id=ca-app-pub-.../...
 | `kakao.rest.api.key` | [Kakao Developers](https://developers.kakao.com/) | 영문 POI keyword 검색 |
 | `kakao.js.api.key` | Kakao Developers | 상세 시트 KakaoMap WebView |
 | `admob.app.id` / `admob.banner.unit.id` | [AdMob](https://admob.google.com/) | release 배너 광고 |
+
+### 출시 패키지
+
+Play Console에 등록한 출시 패키지는 `com.inkcat.zipkr`이다. Kotlin 소스의 namespace는 기존 `com.jewan.zipkr`를 유지하지만, 스토어에 올라가는 `applicationId`는 Gradle 기본값으로 `com.inkcat.zipkr`를 사용한다.
+
+Firebase/Crashlytics/Analytics를 쓰려면 Firebase 콘솔에서 Android 앱 패키지 `com.inkcat.zipkr`를 추가하고 새 `app/google-services.json`을 내려받아야 한다. 아직 기존 Firebase 설정으로 로컬 검증을 해야 할 때만 아래처럼 임시 override를 사용한다.
+
+```bash
+./gradlew :app:testDebugUnitTest -Pzipkr.applicationId=com.jewan.zipkr
+```
 
 ### 실행
 

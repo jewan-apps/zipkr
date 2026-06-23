@@ -15,7 +15,10 @@ plugins {
 
 android {
     namespace = "com.jewan.zipkr"
-    compileSdk = 34
+    compileSdk = 36
+
+    val releaseApplicationId =
+        providers.gradleProperty("zipkr.applicationId").orElse("com.inkcat.zipkr").get()
 
     // 키스토어 정보는 keystore.properties에서 읽는다 (gitignore 처리됨).
     // 파일이 없거나 storeFile이 비면 release signing이 비활성화된다 — release 빌드 실패 유도.
@@ -40,9 +43,9 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.jewan.zipkr"
+        applicationId = releaseApplicationId
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0.0"
 
