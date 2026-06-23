@@ -120,8 +120,7 @@ private fun findNormalizedMatch(
         .filter { !text[it].isWhitespace() }
         .mapNotNull { matchStart ->
             consumeMatch(text, matchStart, normalizedQuery)?.let { matchStart to it }
-        }
-        .firstOrNull()
+        }.firstOrNull()
 
 /**
  * matchStart부터 normalizedQuery를 char-by-char 매칭한다 (텍스트의 공백은 skip).

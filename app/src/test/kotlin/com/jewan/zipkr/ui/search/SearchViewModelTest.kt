@@ -2,6 +2,8 @@ package com.jewan.zipkr.ui.search
 
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import com.jewan.zipkr.analytics.AnalyticsTracker
+import com.jewan.zipkr.analytics.SearchQueryType
 import com.jewan.zipkr.data.Address
 import com.jewan.zipkr.data.AddressPage
 import com.jewan.zipkr.data.AddressRepository
@@ -11,10 +13,11 @@ import com.jewan.zipkr.data.Sido
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
-import kotlinx.coroutines.flow.flowOf
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
@@ -33,12 +36,13 @@ class SearchViewModelTest {
             every { observeFavorites() } returns flowOf(emptyList())
             every { observeRecent() } returns flowOf(emptyList())
         }
+    private val analyticsTracker: AnalyticsTracker = mockk(relaxed = true)
     private lateinit var viewModel: SearchViewModel
 
     @Before
     fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
-        viewModel = SearchViewModel(repository, historyRepository)
+        viewModel = SearchViewModel(repository, historyRepository, analyticsTracker)
     }
 
     @After
@@ -140,6 +144,12 @@ class SearchViewModelTest {
                 assertThat(phase.results).isEqualTo(zipResult)
             }
             coVerify(exactly = 1) { repository.search("11823", 1, 50) }
+            verify(exactly = 1) {
+                analyticsTracker.trackSearchAddress(
+                    queryType = SearchQueryType.PostalCode,
+                    sidoSelected = false,
+                )
+            }
         }
 
     @Test
@@ -161,6 +171,20 @@ class SearchViewModelTest {
             // sido prefix가 합성되지 않은 raw 우편번호로만 호출됐음을 검증한다.
             coVerify(exactly = 1) { repository.search("06236", 1, 50) }
             coVerify(exactly = 0) { repository.search(match { it.contains("서울특별시") }, any(), any()) }
+            verify(exactly = 1) {
+                analyticsTracker.trackSearchAddress(
+                    queryType = SearchQueryType.PostalCode,
+                    sidoSelected = true,
+                )
+            }
+        }
+
+    @Test
+    fun `우편번호 복사 추적 이벤트를 전달한다`() =
+        runTest {
+            viewModel.trackCopyPostalCode()
+
+            verify(exactly = 1) { analyticsTracker.trackCopyPostalCode() }
         }
 
     @Test

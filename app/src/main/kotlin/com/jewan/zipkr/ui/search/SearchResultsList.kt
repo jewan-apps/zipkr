@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.jewan.zipkr.R
 import com.jewan.zipkr.data.Address
 import com.jewan.zipkr.ui.components.AddressResultCard
+import com.jewan.zipkr.ui.components.CopyField
 import com.jewan.zipkr.ui.theme.ZipkrSpacing
 
 // 리스트 끝에서 이 숫자만큼 앞서 다음 page를 미리 fetch해 UX를 부드럽게 한다.
@@ -39,7 +40,7 @@ private const val PREFETCH_THRESHOLD = 5
 internal fun SearchResultsList(
     phase: SearchUiState.Phase.Success,
     query: String,
-    onCopyAddress: (label: String, text: String) -> Unit,
+    onCopyAddress: (field: CopyField, label: String, text: String) -> Unit,
     onCardClick: (Address) -> Unit,
     onLoadMore: () -> Unit,
 ) {

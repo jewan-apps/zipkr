@@ -63,14 +63,14 @@ private const val HIGHLIGHT_SCALE = 1.04f
  * 2. HorizontalDivider
  * 3. CopyBar: 4-segment 액션 — 영문 / 지번 / 도로명(brand tint) / 우편번호(filled primary)
  *
- * onCopyAddress(label, text)는 단일 콜백으로 통합한다 — 카드 내부에서 어떤 항목인지 구분해 호출한다.
+ * onCopyAddress(field, label, text)는 단일 콜백으로 통합한다 — 카드 내부에서 어떤 항목인지 구분해 호출한다.
  */
 @Composable
 fun AddressResultCard(
     address: Address,
     query: String,
     onCardClick: () -> Unit,
-    onCopyAddress: (label: String, text: String) -> Unit,
+    onCopyAddress: (field: CopyField, label: String, text: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val zipLabel = stringResource(R.string.copy_zip_label)
@@ -99,19 +99,19 @@ fun AddressResultCard(
             HorizontalDivider()
             CopyBar(
                 onCopyZip = {
-                    onCopyAddress(zipLabel, address.zipCode)
+                    onCopyAddress(CopyField.Zip, zipLabel, address.zipCode)
                     lastCopied = CopyField.Zip
                 },
                 onCopyRoad = {
-                    onCopyAddress(roadLabel, address.roadAddress)
+                    onCopyAddress(CopyField.Road, roadLabel, address.roadAddress)
                     lastCopied = CopyField.Road
                 },
                 onCopyJibun = {
-                    onCopyAddress(jibunLabel, address.jibunAddress)
+                    onCopyAddress(CopyField.Jibun, jibunLabel, address.jibunAddress)
                     lastCopied = CopyField.Jibun
                 },
                 onCopyEnglish = {
-                    onCopyAddress(englishLabel, address.englishAddress)
+                    onCopyAddress(CopyField.English, englishLabel, address.englishAddress)
                     lastCopied = CopyField.English
                 },
             )
@@ -256,7 +256,7 @@ private fun AddressResultCardPreview() {
                 ),
             query = "테헤란",
             onCardClick = {},
-            onCopyAddress = { _, _ -> },
+            onCopyAddress = { _, _, _ -> },
         )
     }
 }

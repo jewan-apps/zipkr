@@ -36,8 +36,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.jewan.zipkr.BuildConfig
 import com.jewan.zipkr.R
@@ -49,6 +47,8 @@ import com.jewan.zipkr.ui.components.MapDeepLinkButtons
 import com.jewan.zipkr.ui.theme.ZipkrSpacing
 import com.jewan.zipkr.util.copyToClipboard
 import com.jewan.zipkr.util.lightHaptic
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 private val SHEET_RADIUS = 24.dp
 private val MAP_HEIGHT = 220.dp
@@ -78,7 +78,7 @@ fun DetailSheet(
 
     val isFavorite by viewModel.isFavoriteFlow(address).collectAsState(initial = false)
     val labels = rememberCopyLabels()
-    val copy = rememberCopyHandler()
+    val copy = rememberCopyHandler(onCopyPostalCode = viewModel::trackCopyPostalCode)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -118,7 +118,7 @@ private fun rememberCopyLabels(): CopyLabels =
  * lastCopied는 HIGHLIGHT_DURATION_MS 이후 null로 자동 해제되어 본문 강조가 잠깐만 유지된다.
  */
 @Composable
-private fun rememberCopyHandler(): CopyHandler {
+private fun rememberCopyHandler(onCopyPostalCode: () -> Unit): CopyHandler {
     val context = LocalContext.current
     val view = LocalView.current
     val toastTpl = stringResource(R.string.copy_toast)
@@ -135,6 +135,7 @@ private fun rememberCopyHandler(): CopyHandler {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             Toast.makeText(context, toastTpl.format(text), Toast.LENGTH_SHORT).show()
         }
+        if (field == CopyField.Zip) onCopyPostalCode()
         lastCopied = field
     }
     return CopyHandler(lastCopied, onCopy)

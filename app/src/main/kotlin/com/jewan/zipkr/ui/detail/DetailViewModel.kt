@@ -2,6 +2,7 @@ package com.jewan.zipkr.ui.detail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jewan.zipkr.analytics.AnalyticsTracker
 import com.jewan.zipkr.data.Address
 import com.jewan.zipkr.data.CoordinateRepository
 import com.jewan.zipkr.data.Result
@@ -28,6 +29,7 @@ class DetailViewModel
     constructor(
         private val coordinateRepository: CoordinateRepository,
         private val searchHistoryRepository: SearchHistoryRepository,
+        private val analyticsTracker: AnalyticsTracker,
     ) : ViewModel() {
         private val _coordinate = MutableStateFlow<CoordinatePhase>(CoordinatePhase.Loading)
         val coordinate: StateFlow<CoordinatePhase> = _coordinate.asStateFlow()
@@ -52,6 +54,10 @@ class DetailViewModel
 
         fun toggleFavorite(address: Address) {
             viewModelScope.launch { searchHistoryRepository.toggleFavorite(address) }
+        }
+
+        fun trackCopyPostalCode() {
+            analyticsTracker.trackCopyPostalCode()
         }
 
         /**

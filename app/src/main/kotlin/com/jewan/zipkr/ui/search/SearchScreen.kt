@@ -48,6 +48,7 @@ import com.jewan.zipkr.R
 import com.jewan.zipkr.ads.AdBanner
 import com.jewan.zipkr.data.Address
 import com.jewan.zipkr.data.AppError
+import com.jewan.zipkr.ui.components.CopyField
 import com.jewan.zipkr.ui.components.EmptyState
 import com.jewan.zipkr.ui.components.ErrorView
 import com.jewan.zipkr.ui.components.HistoryFavoritesPanel
@@ -230,8 +231,9 @@ private fun rememberSearchCallbacks(
                 viewModel.searchNow()
                 onSubmitExtra()
             },
-            onCopyAddress = { label, text ->
+            onCopyAddress = { field, label, text ->
                 context.copyToClipboard(label, text)
+                if (field == CopyField.Zip) viewModel.trackCopyPostalCode()
                 view.lightHaptic()
                 // Android 13+ (API 33+)는 시스템이 자동 클립보드 토스트를 띄우므로 중복을 막는다.
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
@@ -328,7 +330,7 @@ private fun SearchBar(
 private data class SearchCallbacks(
     val onQueryChange: (String) -> Unit,
     val onSubmit: () -> Unit,
-    val onCopyAddress: (label: String, text: String) -> Unit,
+    val onCopyAddress: (field: CopyField, label: String, text: String) -> Unit,
     val onCardClick: (Address) -> Unit,
     val onRetry: () -> Unit,
     val onLoadMore: () -> Unit,

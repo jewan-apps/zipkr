@@ -1,6 +1,7 @@
 package com.jewan.zipkr.ui.detail
 
 import com.google.common.truth.Truth.assertThat
+import com.jewan.zipkr.analytics.AnalyticsTracker
 import com.jewan.zipkr.data.AppError
 import com.jewan.zipkr.data.Coordinate
 import com.jewan.zipkr.data.CoordinateRepository
@@ -9,9 +10,10 @@ import com.jewan.zipkr.data.SearchHistoryRepository
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.flow.flowOf
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -28,12 +30,13 @@ class DetailViewModelTest {
             every { observeFavorites() } returns flowOf(emptyList())
             every { observeRecent() } returns flowOf(emptyList())
         }
+    private val analyticsTracker: AnalyticsTracker = mockk(relaxed = true)
     private lateinit var viewModel: DetailViewModel
 
     @Before
     fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
-        viewModel = DetailViewModel(repo, historyRepo)
+        viewModel = DetailViewModel(repo, historyRepo, analyticsTracker)
     }
 
     @After
@@ -68,5 +71,13 @@ class DetailViewModelTest {
 
             val phase = viewModel.coordinate.value as CoordinatePhase.Failure
             assertThat(phase.error).isInstanceOf(AppError.Network::class.java)
+        }
+
+    @Test
+    fun `우편번호 복사 추적 이벤트를 전달한다`() =
+        runTest {
+            viewModel.trackCopyPostalCode()
+
+            verify(exactly = 1) { analyticsTracker.trackCopyPostalCode() }
         }
 }

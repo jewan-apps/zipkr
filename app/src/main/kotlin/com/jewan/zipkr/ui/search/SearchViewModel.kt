@@ -2,6 +2,8 @@ package com.jewan.zipkr.ui.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jewan.zipkr.analytics.AnalyticsTracker
+import com.jewan.zipkr.analytics.SearchQueryType
 import com.jewan.zipkr.data.Address
 import com.jewan.zipkr.data.AddressPage
 import com.jewan.zipkr.data.AddressRepository
@@ -36,6 +38,7 @@ class SearchViewModel
     constructor(
         private val repository: AddressRepository,
         private val historyRepository: SearchHistoryRepository,
+        private val analyticsTracker: AnalyticsTracker,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(SearchUiState())
         val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
@@ -93,6 +96,10 @@ class SearchViewModel
         fun searchNow() {
             lastTriggeredQuery = null
             runSearch(_uiState.value.query)
+        }
+
+        fun trackCopyPostalCode() {
+            analyticsTracker.trackCopyPostalCode()
         }
 
         /**
@@ -176,6 +183,10 @@ class SearchViewModel
             // effective query를 trigger 키로 쓰면 sido 변경만으로도 같은 base query에 대해 새 호출이 트리거된다.
             val effective = effectiveQuery(query, _uiState.value.selectedSido)
             lastTriggeredQuery = effective
+            analyticsTracker.trackSearchAddress(
+                queryType = query.searchQueryType(),
+                sidoSelected = _uiState.value.selectedSido != null,
+            )
             _uiState.value = _uiState.value.copy(phase = SearchUiState.Phase.Loading)
             inFlight =
                 viewModelScope.launch {
@@ -199,6 +210,15 @@ class SearchViewModel
                 query.matches(POSTAL_CODE_PATTERN) -> query
                 else -> "${sido.apiPrefix} $query"
             }
+
+        private fun String.searchQueryType(): SearchQueryType =
+            when {
+                matches(POSTAL_CODE_PATTERN) -> SearchQueryType.PostalCode
+                isEnglishOnly() -> SearchQueryType.English
+                else -> SearchQueryType.Korean
+            }
+
+        private fun String.isEnglishOnly(): Boolean = none { it in '가'..'힣' || it in 'ㄱ'..'ㆎ' } && any { it.isLetter() }
 
         /** 첫 page(runSearch) 결과를 매핑한다. accumulated 없이 단순 변환만 한다. */
         private fun mapFirstPage(result: Result<AddressPage>): SearchUiState.Phase =

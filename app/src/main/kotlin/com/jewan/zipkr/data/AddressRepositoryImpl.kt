@@ -41,6 +41,5 @@ class AddressRepositoryImpl
          *
          * 예: "Gangnam Station" → 영문 / "강남역" → 한글 / "Gangnam 강남" → 한글 / "06236" → 한글.
          */
-        private fun String.isEnglishOnly(): Boolean =
-            none { it in '가'..'힣' || it in 'ㄱ'..'ㆎ' } && any { it.isLetter() }
+        private fun String.isEnglishOnly(): Boolean = none { it in '가'..'힣' || it in 'ㄱ'..'ㆎ' } && any { it.isLetter() }
     }

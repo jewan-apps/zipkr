@@ -44,6 +44,7 @@ private const val GRID_COLUMNS = 4
 private val CHIP_HEIGHT = 44.dp
 private val CHIP_RADIUS = 12.dp
 private val CHIP_BORDER = 1.dp
+
 // 4 column grid에서 영문 라벨(Gyeongbuk 등 9자)도 한 줄에 안전하게 들어가도록 12sp로 통일했다.
 // 한글(2자)에선 살짝 작아 보이지만 calmer 톤에 맞고, 영문에선 칩 안에 깔끔히 들어간다.
 private val CHIP_LABEL_SIZE = 12.sp
