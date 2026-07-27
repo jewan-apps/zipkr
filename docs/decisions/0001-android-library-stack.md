@@ -5,7 +5,7 @@
 | 상태 | 승인됨 |
 | 날짜 | 2026-04-25 |
 | 결정자 | jewan |
-| 적용 범위 | zipkr 및 후속 프로젝트 (`jewan-apps/*`) |
+| 적용 범위 | zipkr 및 후속 프로젝트 (`inkcat-apps/*`) |
 | 관련 spec | `docs/superpowers/specs/2026-04-25-postal-app-design.md` |
 | 준수 헌법 | `JEWAN_DEV_CONSTITUTION.md` §8 (기술 도입 심사 규칙) |
 

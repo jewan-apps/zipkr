@@ -2102,7 +2102,7 @@ GH_TOKEN=$(gh auth token --user jewan100) git push -u origin feat/detail-sheet-v
 - [ ] **Step 2: PR 생성**
 
 ```bash
-GH_TOKEN=$(gh auth token --user jewan100) gh pr create -R jewan-apps/zipkr \
+GH_TOKEN=$(gh auth token --user jewan100) gh pr create -R inkcat-apps/zipkr \
   --base develop --head feat/detail-sheet-v1 \
   --title "[FEAT] zipkr 상세 모달 시트 + 카카오맵 WebView (Phase 4 v2)" \
   --body "$(cat <<'EOF'

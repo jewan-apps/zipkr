@@ -2,7 +2,7 @@
 
 **작성일**: 2026-04-25
 **상태**: 설계 완료 (구현 계획 작성 대기)
-**GitHub**: https://github.com/jewan-apps/zipkr (Public)
+**GitHub**: https://github.com/inkcat-apps/zipkr (Public)
 **준수 표준**: 내부 개발 헌법(JEWAN_DEV_CONSTITUTION)
 **관련 ADR**: [`docs/decisions/0001-android-library-stack.md`](../../decisions/0001-android-library-stack.md) (라이브러리 일괄 승인)
 
