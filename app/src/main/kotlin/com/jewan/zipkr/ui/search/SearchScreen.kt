@@ -44,6 +44,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jewan.zipkr.BuildConfig
 import com.jewan.zipkr.R
 import com.jewan.zipkr.ads.AdBanner
 import com.jewan.zipkr.data.Address
@@ -75,8 +76,14 @@ private fun rememberAutoFocusKeyboard(): Pair<FocusRequester, SoftwareKeyboardCo
     val keyboard = LocalSoftwareKeyboardController.current
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) {
-        focus.requestFocus()
-        keyboard?.show()
+        // SHOW_ADS 는 광고 노출 플래그인 동시에 **스토어 스크린샷 촬영 모드 스위치**로 쓴다
+        // (`-Pzipkr.showAds=false`). 촬영 시 키보드가 화면 절반을 가리면 결과 카드가 안 보이므로
+        // 자동 포커스도 함께 끈다. 광고와 키보드는 무관하지만 촬영 모드가 이 하나뿐이라 재사용한다.
+        // 촬영 목적 외에는 이 값을 false 로 빌드하지 않는다 — 즉시성(진입 즉시 입력)이 사라진다.
+        if (BuildConfig.SHOW_ADS) {
+            focus.requestFocus()
+            keyboard?.show()
+        }
     }
     return focus to keyboard
 }

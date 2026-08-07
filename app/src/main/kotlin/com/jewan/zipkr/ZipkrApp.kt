@@ -2,6 +2,7 @@ package com.jewan.zipkr
 
 import android.app.Application
 import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.RequestConfiguration
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
@@ -22,6 +23,17 @@ class ZipkrApp : Application() {
         } else {
             Timber.plant(CrashlyticsTree())
         }
+        configureAds()
+    }
+
+    private fun configureAds() {
+        val requestConfiguration =
+            MobileAds
+                .getRequestConfiguration()
+                .toBuilder()
+                .setMaxAdContentRating(RequestConfiguration.MAX_AD_CONTENT_RATING_G)
+                .build()
+        MobileAds.setRequestConfiguration(requestConfiguration)
         MobileAds.initialize(this) {}
     }
 }

@@ -28,6 +28,8 @@ private val MIN_BANNER_HEIGHT = 60.dp
  */
 @Composable
 fun AdBanner(modifier: Modifier = Modifier) {
+    if (!BuildConfig.SHOW_ADS) return
+
     AndroidView(
         modifier = modifier.fillMaxWidth().height(MIN_BANNER_HEIGHT),
         factory = { ctx ->

@@ -46,8 +46,8 @@ android {
         applicationId = releaseApplicationId
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
@@ -77,6 +77,13 @@ android {
         }
         buildConfigField("String", "ADMOB_APP_ID", "\"ca-app-pub-3940256099942544~3347511713\"")
         buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"ca-app-pub-3940256099942544/6300978111\"")
+        val showAds =
+            providers
+                .gradleProperty("zipkr.showAds")
+                .orElse("true")
+                .get()
+                .toBoolean()
+        buildConfigField("Boolean", "SHOW_ADS", showAds.toString())
         manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
     }
 
