@@ -24,12 +24,12 @@
     <string name="load_more_retry">Failed to load more. Retry</string>
 
     <!-- Error messages: ViewModel sends only AppError type, Composable maps to these keys.
-         Tells users "what to do next" rather than "why it failed" (clarity over cause). -->
+         Leads with "what to do next", but each failure kind must read differently — see values/strings.xml. -->
     <string name="error_network">Check your internet connection</string>
-    <string name="error_api">Please try again later</string>
-    <string name="error_unknown">Please try again later</string>
-    <string name="error_auth">Please try again later</string>
-    <string name="error_path">Please try again later</string>
+    <string name="error_api">The address service returned an error. Please try again later</string>
+    <string name="error_unknown">Something went wrong. Please try again later</string>
+    <string name="error_auth">The address service is temporarily suspended. We are working to restore it</string>
+    <string name="error_path">There is a problem connecting to the address service. Please update to the latest version</string>
     <string name="error_empty_query">Please enter a search term</string>
     <string name="error_query_too_broad">Too many results. Please be more specific</string>
     <string name="error_query_too_short">Please enter a longer keyword</string>

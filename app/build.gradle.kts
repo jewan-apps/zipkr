@@ -229,3 +229,14 @@ ktlint {
         reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.HTML)
     }
 }
+
+// ErrorStringsDistinctTest 는 strings.xml 을 런타임에 직접 읽는다. Gradle 은 그 파일을
+// 테스트 입력으로 알지 못해, 리소스만 고치면 테스트를 UP-TO-DATE 로 건너뛴다.
+// 실제로 2026-08-07 검증 중 중복을 주입해도 BUILD SUCCESSFUL 이 나왔다 (--rerun-tasks 로만 잡힘).
+// 입력을 명시해 리소스 변경 시 반드시 재실행되게 한다.
+tasks.withType<Test>().configureEach {
+    inputs
+        .files(fileTree("src/main/res") { include("**/strings.xml") })
+        .withPropertyName("stringResources")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+}
